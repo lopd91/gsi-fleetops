@@ -2,11 +2,16 @@ services:
   - type: web
     name: gsi-fleetops
     runtime: node
+    nodeVersion: 18.20.4
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.js
     envVars:
       - key: SESSION_SECRET
         generateValue: true
       - key: NODE_ENV
         value: production
     healthCheckPath: /api/auth/me
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
