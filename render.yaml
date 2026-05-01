@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gsi-fleetops
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /api/auth/me
