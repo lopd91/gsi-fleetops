@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSI FleetOps</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root{--bg:#0d0f14;--surface:#141720;--surface2:#1c2030;--border:#252a3a;--accent:#f5a623;--accent2:#3b82f6;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;--text:#e8eaf0;--text2:#8890a8;--text3:#555e78}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
+.topnav{background:var(--surface);border-bottom:2px solid var(--accent);padding:0 16px;display:flex;align-items:center;height:54px;position:sticky;top:0;z-index:100;gap:0;flex-wrap:wrap}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:2px;color:var(--accent);margin-right:24px;text-transform:uppercase;white-space:nowrap}
+.logo span{color:var(--text2);font-weight:400}
+.nav-tabs{display:flex;gap:2px;flex:1;flex-wrap:wrap}
+.nav-tab{padding:7px 14px;border:none;background:transparent;color:var(--text2);font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:4px;transition:all .2s;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
+.nav-tab:hover{background:var(--surface2);color:var(--text)}
+.nav-tab.active{background:var(--accent);color:#000;font-weight:700}
+.nav-clock{font-size:12px;color:var(--text3);white-space:nowrap}
+.page{display:none;padding:20px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.orange::before{background:var(--accent)}
+.stat-card.blue::before{background:var(--accent2)}
+.stat-card.green::before{background:var(--success)}
+.stat-card.red::before{background:var(--danger)}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px}
+.stat-value{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;line-height:1}
+.stat-card.orange .stat-value{color:var(--accent)}
+.stat-card.blue .stat-value{color:var(--accent2)}
+.stat-card.green .stat-value{color:var(--success)}
+.stat-card.red .stat-value{color:var(--danger)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);font-weight:600}
+input,select,textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:5px;font-family:'Barlow',sans-serif;font-size:13px;transition:border-color .2s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:65px}
+select option{background:var(--surface)}
+.btn{padding:8px 18px;border:none;border-radius:5px;font-family:'Barlow',sans-serif;font-weight:600;font-size:12px;cursor:pointer;transition:all .2s;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#e6951a}
+.btn-blue{background:var(--accent2);color:#fff}
+.btn-blue:hover{background:#2563eb}
+.btn-success{background:var(--success);color:#000}
+.btn-success:hover{background:#16a34a}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-family:'Barlow Condensed',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:hover td{background:var(--surface2)}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.badge-pending{background:#f5a62322;color:var(--accent);border:1px solid #f5a62344}
+.badge-active{background:#3b82f622;color:var(--accent2);border:1px solid #3b82f644}
+.badge-completed{background:#22c55e22;color:var(--success);border:1px solid #22c55e44}
+.badge-cancelled{background:#ef444422;color:var(--danger);border:1px solid #ef444444}
+.badge-approved{background:#22c55e22;color:var(--success);border:1px solid #22c55e44}
+.badge-rejected{background:#ef444422;color:var(--danger);border:1px solid #ef444444}
+.badge-review{background:#f59e0b22;color:var(--warning);border:1px solid #f59e0b44}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+/* MODAL — completely standalone overlay, nothing can override it */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.78);z-index:99999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;width:100%;max-width:660px;margin:auto;position:relative}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:18px;padding-right:30px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1;padding:0}
+.modal-close:hover{color:var(--danger)}
+.receipt-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:12px;margin-top:10px}
+.receipt-box .r-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)}
+.receipt-box .r-row:last-child{border:none}
+.receipt-box .r-label{color:var(--text2)}
+.receipt-box .r-total{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--success);text-align:right;margin-top:8px}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-bar input,.filter-bar select{flex:1;min-width:130px;max-width:200px}
+.progress-bar{background:var(--border);border-radius:4px;height:5px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+.driver-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.driver-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative}
+.driver-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#000;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px}
+.driver-name{font-weight:700;font-size:14px;margin-bottom:2px}
+.driver-info{font-size:11px;color:var(--text2);margin-bottom:3px}
+.driver-status-badge{position:absolute;top:12px;right:12px}
+.page-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.page-tab{padding:6px 14px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;transition:all .2s;text-transform:uppercase;letter-spacing:.4px}
+.page-tab.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.upload-drop{border:2px dashed var(--border);border-radius:6px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--bg)}
+.upload-drop:hover{border-color:var(--accent)}
+#toast{position:fixed;bottom:20px;right:20px;z-index:999999;background:var(--success);color:#000;padding:11px 18px;border-radius:6px;font-weight:700;font-size:13px;display:none;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media print{body{background:#fff;color:#000}.topnav,.btn,.nav-tabs,.filter-bar,.page-tabs{display:none!important}}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:100000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,.6)">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;letter-spacing:5px;color:var(--accent)">GSI</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:3px;color:var(--text2);text-transform:uppercase;margin-top:-4px">FleetOps</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:8px;letter-spacing:.5px">Logistics Management System</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);font-weight:600;display:block;margin-bottom:6px">Username</label>
+      <input type="text" id="lu" placeholder="Enter username" autocomplete="username"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:6px;font-size:14px;font-family:'Barlow',sans-serif">
+    </div>
+    <div style="margin-bottom:22px">
+      <label style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);font-weight:600;display:block;margin-bottom:6px">Password</label>
+      <input type="password" id="lp" placeholder="Enter password" autocomplete="current-password"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:6px;font-size:14px;font-family:'Barlow',sans-serif">
+    </div>
+    <div id="login-err" style="color:var(--danger);font-size:12px;margin-bottom:14px;min-height:16px;text-align:center;font-weight:600"></div>
+    <button id="login-btn" onclick="doLogin()"
+      style="width:100%;background:var(--accent);color:#000;border:none;padding:13px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s">
+      SIGN IN
+    </button>
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--text3)">Contact your system administrator for access</div>
+  </div>
+</div>
+
+<!-- ═══════════ USER MANAGEMENT MODALS ═══════════ -->
+<div class="modal-overlay" id="modal-users">
+  <div class="modal" style="max-width:900px">
+    <button class="modal-close" onclick="closeModal('modal-users')">x</button>
+    <div class="modal-title">Users Management (30 Users)</div>
+    <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--text2)">Manage all system users. Default admin password: <b style="color:var(--accent)">Admin@GSI2025</b></div>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('modal-users');openModal('modal-new-user')">+ New User</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Username</th><th>Full Name</th><th>Role</th><th>Department</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+      <tbody id="users-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-new-user">
+  <div class="modal" style="max-width:500px">
+    <button class="modal-close" onclick="closeModal('modal-new-user')">x</button>
+    <div class="modal-title">+ New User</div>
+    <div class="form-row">
+      <div class="form-group"><label>Username</label><input type="text" id="nu-u" placeholder="e.g. john.smith (lowercase)"></div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="nu-f" placeholder="John Smith"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Password</label><input type="password" id="nu-p" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Role</label>
+        <select id="nu-r"><option value="user">User (Standard)</option><option value="admin">Admin (Full Access)</option></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Department (optional)</label>
+      <input type="text" id="nu-d" placeholder="Operations, Finance, Dispatch..."></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="_createUser()">Create User</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-new-user');openModal('modal-users')">Back to List</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal" style="max-width:500px">
+    <button class="modal-close" onclick="closeModal('modal-edit-user')">x</button>
+    <div class="modal-title">Edit User</div>
+    <input type="hidden" id="ue-id">
+    <div class="form-row">
+      <div class="form-group"><label>Username (cannot change)</label><input type="text" id="ue-uname" readonly style="opacity:.5"></div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="ue-fname"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Role</label>
+        <select id="ue-role"><option value="user">User</option><option value="admin">Admin</option></select>
+      </div>
+      <div class="form-group"><label>Department</label><input type="text" id="ue-dept"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Account Status</label>
+        <select id="ue-active"><option value="1">Active</option><option value="0">Inactive (blocked)</option></select>
+      </div>
+      <div class="form-group"><label>New Password (blank = no change)</label>
+        <input type="password" id="ue-pass" placeholder="Leave blank to keep"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="_saveEditUser()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-user');openModal('modal-users')">Back</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-change-pw">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('modal-change-pw')">x</button>
+    <div class="modal-title">Change My Password</div>
+    <div class="form-group" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="cp-cur" placeholder="Current password"></div>
+    <div class="form-group" style="margin-bottom:12px"><label>New Password</label><input type="password" id="cp-new" placeholder="Min 6 characters"></div>
+    <div id="cp-err" style="color:var(--danger);font-size:12px;margin-bottom:10px;min-height:14px"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doChangePassword()">Update Password</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-change-pw')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<div class="topnav">
+  <div class="logo">GSI<span>Fleet</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="switchPage('bookings')">Bookings</button>
+    <button class="nav-tab" onclick="switchPage('drivers')">Drivers</button>
+    <button class="nav-tab" onclick="switchPage('trucks')">Trucks</button>
+    <button class="nav-tab" onclick="switchPage('pettycash')">Petty Cash</button>
+    <button class="nav-tab" onclick="switchPage('tracking')">🛰 GPS</button>
+  </div>
+  <div id="nav-admin-btn" style="display:none"><button class="nav-tab" onclick="openUserManagement()">&#128101; Users</button></div><div style="display:flex;align-items:center;gap:8px;margin-left:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="openChangePassword()">&#128273;</button><span id="nav-user-info" style="font-size:11px;color:var(--text2);white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis"></span><button class="btn btn-danger btn-sm" onclick="doLogout()">Sign Out</button></div><div class="nav-clock" id="clock"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="section-header">
+    <div class="section-title">Operations Dashboard</div>
+    <div style="font-size:12px;color:var(--text2)" id="dash-date"></div>
+  </div>
+  <div class="stats-row" id="dash-stats"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">📋 Recent Bookings</div>
+      <div class="table-wrap"><table><thead><tr><th>Job#</th><th>Client</th><th>Route</th><th>Driver</th><th>Status</th></tr></thead><tbody id="dash-bookings-body"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Recent Petty Cash</div>
+      <div class="table-wrap"><table><thead><tr><th>Voucher#</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody id="dash-cash-body"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKINGS -->
+<div id="page-bookings" class="page">
+  <div class="page-tabs">
+    <button class="page-tab active" onclick="switchBookingTab('jobs')">📋 Job Bookings</button>
+    <button class="page-tab" onclick="switchBookingTab('clients')">🏢 Clients / Companies</button>
+  </div>
+  <div id="btab-jobs" class="tab-content active">
+    <div class="section-header">
+      <div class="section-title">Truck Bookings</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-success" onclick="openExportModal()">⬇ Export Report</button>
+        <button class="btn btn-primary" onclick="openBookingModal()">+ New Booking</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="booking-search" placeholder="Search job#, client, route..." oninput="renderBookings()">
+      <select id="booking-filter-status" onchange="renderBookings()">
+        <option value="">All Statuses</option><option value="pending">Pending</option><option value="active">Active</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+      </select>
+      <select id="booking-filter-driver" onchange="renderBookings()"><option value="">All Drivers</option></select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr><th>Job #</th><th>Date</th><th>Client</th><th>From</th><th>To</th><th>Truck</th><th>Driver</th><th>Cargo</th><th>Amount</th><th>Status</th><th>Doc</th><th>Actions</th></tr></thead>
+        <tbody id="bookings-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div id="btab-clients" class="tab-content">
+    <div class="section-header">
+      <div class="section-title">Client / Company Registry</div>
+      <button class="btn btn-primary" onclick="openClientModal()">+ Add Client</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="client-search" placeholder="Search company, contact, TRN..." oninput="renderClients()">
+      <select id="client-filter" onchange="renderClients()"><option value="">All Types</option><option value="company">Company</option><option value="individual">Individual</option><option value="government">Government</option></select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr><th>Client #</th><th>Company / Name</th><th>Type</th><th>Contact</th><th>Phone</th><th>Email</th><th>TRN</th><th>Jobs</th><th>Actions</th></tr></thead>
+        <tbody id="clients-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVERS -->
+<div id="page-drivers" class="page">
+  <div class="page-tabs">
+    <button class="page-tab active" onclick="switchDriverTab('drivers')">👷 Our Drivers</button>
+    <button class="page-tab" onclick="switchDriverTab('vendors')">🏭 Vendors</button>
+  </div>
+  <div id="dtab-drivers" class="tab-content active">
+    <div class="section-header">
+      <div class="section-title">Driver Management</div>
+      <button class="btn btn-primary" onclick="openDriverModal()">+ Add Driver</button>
+    </div>
+    <div class="driver-grid" id="drivers-grid"></div>
+  </div>
+  <div id="dtab-vendors" class="tab-content">
+    <div class="section-header">
+      <div class="section-title">Vendor Registry</div>
+      <button class="btn btn-primary" onclick="openVendorModal()">+ Add Vendor</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="vendor-search" placeholder="Search vendor..." oninput="renderVendors()">
+      <select id="vendor-filter" onchange="renderVendors()"><option value="">All Categories</option><option value="transport">Transport</option><option value="fuel">Fuel</option><option value="maintenance">Maintenance</option><option value="tyres">Tyres</option><option value="insurance">Insurance</option><option value="other">Other</option></select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr><th>Vendor #</th><th>Company</th><th>Category</th><th>Contact</th><th>Phone</th><th>TRN</th><th>Terms</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="vendors-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRUCKS -->
+<div id="page-trucks" class="page">
+  <div class="section-header">
+    <div class="section-title">Fleet Management</div>
+    <button class="btn btn-primary" onclick="openTruckModal()">+ Add Truck</button>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="truck-search" placeholder="Search plate, model..." oninput="renderTrucks()">
+    <select id="truck-filter-owner" onchange="renderTrucks()"><option value="">All Ownership</option><option value="gsi">GSI Trucks</option><option value="3rdparty">3rd Party</option></select>
+    <select id="truck-filter-status" onchange="renderTrucks()"><option value="">All Statuses</option><option value="available">Available</option><option value="in-use">In Use</option><option value="maintenance">Maintenance</option></select>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table><thead><tr><th>Plate</th><th>Make/Model</th><th>Type</th><th>Capacity</th><th>Ownership</th><th>Vendor</th><th>Road Tax Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="trucks-body"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- PETTY CASH -->
+<div id="page-pettycash" class="page">
+  <div class="stats-row" id="cash-stats"></div>
+  <div class="page-tabs">
+    <button class="page-tab active" onclick="switchCashTab('vouchers')">Vouchers</button>
+    <button class="page-tab" onclick="switchCashTab('receipts')">Receipts</button>
+    <button class="page-tab" onclick="switchCashTab('cashbook')">Cash Book</button>
+  </div>
+  <div id="tab-vouchers" class="tab-content active">
+    <div class="section-header">
+      <div class="section-title">Petty Cash Vouchers</div>
+      <button class="btn btn-primary" onclick="openVoucherModal()">+ New Voucher</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="voucher-search" placeholder="Search voucher..." oninput="renderVouchers()">
+      <select id="voucher-filter" onchange="renderVouchers()"><option value="">All Statuses</option><option value="review">Under Review</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr><th>Voucher #</th><th>Date</th><th>Category</th><th>Description</th><th>By</th><th>Amount</th><th>Receipt</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="vouchers-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div id="tab-receipts" class="tab-content">
+    <div class="section-header">
+      <div class="section-title">Receipts &amp; Expenses</div>
+      <button class="btn btn-primary" onclick="openReceiptModal()">+ Add Receipt</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="receipt-search" placeholder="Search receipts..." oninput="renderReceipts()">
+      <select id="receipt-filter" onchange="renderReceipts()"><option value="">All Categories</option><option value="fuel">Fuel</option><option value="toll">Toll/Road</option><option value="maintenance">Maintenance</option><option value="meals">Meals</option><option value="parking">Parking</option><option value="other">Other</option></select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table><thead><tr><th>Receipt #</th><th>Date</th><th>Category</th><th>Vendor</th><th>Job#</th><th>Driver</th><th>Amount</th><th>Attachment</th><th>Actions</th></tr></thead>
+        <tbody id="receipts-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div id="tab-cashbook" class="tab-content">
+    <div class="section-header">
+      <div class="section-title">Cash Book Summary</div>
+      <button class="btn btn-ghost" onclick="window.print()">🖨 Print Report</button>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">By Category</div><div id="category-summary"></div></div>
+      <div class="card"><div class="card-title">Monthly Totals</div><div id="monthly-summary"></div></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-title">Full Ledger</div>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Ref#</th><th>Description</th><th>Category</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody id="cashbook-body"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- GPS TRACKING -->
+<div id="page-tracking" class="page">
+  <div class="section-header">
+    <div class="section-title">🛰 Live GPS Truck Tracking</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="refreshGPS()">↻ Refresh</button>
+      <span id="gps-last-update" style="font-size:11px;color:var(--text3)">Last update: —</span>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:18px;border-color:#f5a62344;background:#f5a62308" id="gps-config-banner">
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="font-size:26px">🔌</div>
+      <div style="flex:1">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Connect Your GPS System</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Enter your GPS provider API details. Supports Teltonika, Samsara, Wialon, TrackSolid, Ruptela and any REST JSON API.</div>
+        <div class="form-row">
+          <div class="form-group"><label>GPS Provider</label><select id="gps-provider" onchange="onProviderChange()"><option value="custom">Custom REST API</option><option value="samsara">Samsara</option><option value="teltonika">Teltonika FMB</option><option value="wialon">Wialon</option><option value="tracksolid">TrackSolid</option><option value="ruptela">Ruptela</option></select></div>
+          <div class="form-group"><label>API Endpoint URL</label><input type="text" id="gps-url" placeholder="https://api.provider.com/vehicles/locations"></div>
+          <div class="form-group"><label>API Key / Token</label><input type="password" id="gps-key" placeholder="Bearer token or API key"></div>
+          <div class="form-group"><label>Refresh Interval</label><select id="gps-interval"><option value="30">Every 30 sec</option><option value="60" selected>Every 1 min</option><option value="300">Every 5 min</option></select></div>
+        </div>
+        <div id="gps-provider-hint" style="display:none;font-size:11px;color:var(--text2);padding:7px;background:var(--surface2);border-radius:4px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="saveGPSConfig()">Save &amp; Connect</button>
+          <button class="btn btn-ghost btn-sm" onclick="testGPSConnection()">Test Connection</button>
+          <button class="btn btn-ghost btn-sm" onclick="useSimulatedGPS()">▶ Use Demo Mode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="stats-row" id="gps-stats"></div>
+  <div class="grid2" style="margin-bottom:18px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">📍 Live Map View</div>
+      <canvas id="gps-map-canvas" width="600" height="360" style="width:100%;height:360px;display:block"></canvas>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">🚛 Fleet Status</div>
+      <div id="gps-truck-list" style="overflow-y:auto;max-height:360px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📜 Trip History Log</div>
+    <div class="table-wrap"><table><thead><tr><th>Truck</th><th>Driver</th><th>Last Location</th><th>Speed</th><th>Heading</th><th>Updated</th><th>Status</th></tr></thead><tbody id="gps-history-body"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ========== ALL MODALS ========== -->
+
+<!-- NEW/EDIT BOOKING -->
+<div class="modal-overlay" id="modal-booking">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-booking')">×</button>
+    <div class="modal-title" id="modal-booking-title">New Truck Booking</div>
+    <div class="form-row">
+      <div class="form-group"><label>Job Number</label><input type="text" id="b-job" readonly style="opacity:.6"></div>
+      <div class="form-group"><label>Booking Date</label><input type="date" id="b-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:span 2"><label>Client / Company Name</label><input type="text" id="b-client" placeholder="Client name"></div>
+      <div class="form-group"><label>Contact Number</label><input type="text" id="b-contact" placeholder="+971 XX XXX XXXX"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pickup Location</label><input type="text" id="b-from" placeholder="From"></div>
+      <div class="form-group"><label>Delivery Location</label><input type="text" id="b-to" placeholder="To"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pickup Date/Time</label><input type="datetime-local" id="b-pickup"></div>
+      <div class="form-group"><label>Delivery Date/Time</label><input type="datetime-local" id="b-delivery"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Assign Truck</label><select id="b-truck"></select></div>
+      <div class="form-group"><label>Assign Driver</label><select id="b-driver"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:span 2"><label>Cargo Description</label><input type="text" id="b-cargo" placeholder="Type of goods"></div>
+      <div class="form-group"><label>Weight (tons)</label><input type="number" id="b-weight" placeholder="0.0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Freight Charge (AED)</label><input type="number" id="b-amount" placeholder="0.00"></div>
+      <div class="form-group"><label>Status</label><select id="b-status"><option value="pending">Pending</option><option value="active">Active</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Remarks / Instructions</label><textarea id="b-notes" placeholder="Special instructions..."></textarea></div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>📎 Delivery Note / Document</label>
+      <div class="upload-drop" id="b-doc-drop" onclick="document.getElementById('b-doc-input').click()">
+        <div id="b-doc-label" style="color:var(--text2);font-size:12px">🖼 Click to upload Delivery Note (JPG, PNG, PDF)</div>
+        <img id="b-doc-preview" style="display:none;max-width:100%;max-height:150px;margin-top:8px;border-radius:4px">
+      </div>
+      <input type="file" id="b-doc-input" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this,'b-doc-label','b-doc-preview','bookingDocData')">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveBooking()">Save Booking</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-booking')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW BOOKING -->
+<div class="modal-overlay" id="modal-view-booking">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-view-booking')">×</button>
+    <div class="modal-title">Job Order Details</div>
+    <div id="view-booking-content"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print Job Order</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-booking')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVER -->
+<div class="modal-overlay" id="modal-driver">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-driver')">×</button>
+    <div class="modal-title">Driver Details</div>
+    <div class="form-row">
+      <div class="form-group"><label>Full Name</label><input type="text" id="d-name" placeholder="Driver name"></div>
+      <div class="form-group"><label>Emirates ID / Passport</label><input type="text" id="d-ic" placeholder="ID number"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone Number</label><input type="text" id="d-phone" placeholder="+971..."></div>
+      <div class="form-group"><label>License Type</label><select id="d-license"><option value="3ton">3 Ton Pickup License</option><option value="heavyduty">Heavy Duty License</option><option value="flatbed">Normal Flatbed License</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>License Expiry</label><input type="date" id="d-expiry"></div>
+      <div class="form-group"><label>Status</label><select id="d-status"><option value="available">Available</option><option value="on-trip">On Trip</option><option value="off">Off Duty</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>CICPA Pass</label><select id="d-cicpa"><option value="cicpa">CICPA Pass</option><option value="non-cicpa">Non-CICPA Pass</option></select></div>
+      <div class="form-group"><label>CICPA Expiry Date</label><input type="date" id="d-cicpa-expiry"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveDriver()">Save Driver</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-driver')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRUCK -->
+<div class="modal-overlay" id="modal-truck">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-truck')">×</button>
+    <div class="modal-title">Truck Details</div>
+    <div class="form-row">
+      <div class="form-group"><label>Plate Number</label><input type="text" id="t-plate" placeholder="Dubai A 12345"></div>
+      <div class="form-group"><label>Make / Model</label><input type="text" id="t-model" placeholder="Hino 500"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Truck Type</label><select id="t-type"><option>Box Truck</option><option>Flatbed</option><option>Refrigerated</option><option>Tanker</option><option>Tipper</option><option>Curtainsider</option><option>Container</option></select></div>
+      <div class="form-group"><label>Capacity (tons)</label><input type="number" id="t-capacity" placeholder="5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Road Tax Expiry</label><input type="date" id="t-roadtax"></div>
+      <div class="form-group"><label>Status</label><select id="t-status"><option value="available">Available</option><option value="in-use">In Use</option><option value="maintenance">Maintenance</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ownership</label><select id="t-owner" onchange="toggleTruckVendor()"><option value="gsi">GSI (Own Fleet)</option><option value="3rdparty">3rd Party Vendor</option></select></div>
+      <div class="form-group" id="t-vendor-group" style="display:none"><label>Vendor</label><select id="t-vendor"><option value="">— Select Vendor —</option></select></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveTruck()">Save Truck</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-truck')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-client')">×</button>
+    <div class="modal-title">Client / Company Details</div>
+    <div class="form-row">
+      <div class="form-group"><label>Client ID</label><input type="text" id="cl-id" readonly style="opacity:.6"></div>
+      <div class="form-group"><label>Type</label><select id="cl-type"><option value="company">Company</option><option value="individual">Individual</option><option value="government">Government</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:span 2"><label>Company / Full Name</label><input type="text" id="cl-name" placeholder="Company name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Contact Person</label><input type="text" id="cl-contact" placeholder="Name of contact"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="cl-phone" placeholder="+971 XX XXX XXXX"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email Address</label><input type="email" id="cl-email" placeholder="contact@company.com"></div>
+      <div class="form-group"><label>TRN / Trade Licence No.</label><input type="text" id="cl-trn" placeholder="100-xxxx-xxxx-xxxx"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:span 2"><label>Address</label><textarea id="cl-address" placeholder="Full address..." style="min-height:50px"></textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Credit Limit (AED)</label><input type="number" id="cl-credit" placeholder="0.00"></div>
+      <div class="form-group"><label>Payment Terms</label><select id="cl-terms"><option value="cash">Cash on Delivery</option><option value="net15">Net 15 days</option><option value="net30">Net 30 days</option><option value="net60">Net 60 days</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Notes</label><textarea id="cl-notes" placeholder="Special instructions..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-client')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- VENDOR -->
+<div class="modal-overlay" id="modal-vendor">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-vendor')">×</button>
+    <div class="modal-title">Vendor Details</div>
+    <div class="form-row">
+      <div class="form-group"><label>Vendor ID</label><input type="text" id="vn-id" readonly style="opacity:.6"></div>
+      <div class="form-group"><label>Category</label><select id="vn-cat"><option value="transport">Transport / Haulage</option><option value="fuel">Fuel Supplier</option><option value="maintenance">Maintenance / Workshop</option><option value="tyres">Tyres</option><option value="insurance">Insurance</option><option value="other">Other</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:span 2"><label>Company Name</label><input type="text" id="vn-name" placeholder="Vendor company name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Contact Person</label><input type="text" id="vn-contact" placeholder="Name"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="vn-phone" placeholder="+971 XX XXX XXXX"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" id="vn-email" placeholder="vendor@company.com"></div>
+      <div class="form-group"><label>TRN / Trade Licence No.</label><input type="text" id="vn-trn" placeholder="100-xxxx-xxxx-xxxx"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Payment Terms</label><select id="vn-terms"><option value="cash">Cash</option><option value="net15">Net 15 days</option><option value="net30">Net 30 days</option><option value="net60">Net 60 days</option></select></div>
+      <div class="form-group"><label>Status</label><select id="vn-status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="blacklisted">Blacklisted</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Address / Notes</label><textarea id="vn-notes" placeholder="Address, notes..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveVendor()">Save Vendor</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-vendor')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOUCHER -->
+<div class="modal-overlay" id="modal-voucher">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-voucher')">×</button>
+    <div class="modal-title">Petty Cash Voucher</div>
+    <div class="form-row">
+      <div class="form-group"><label>Voucher Number</label><input type="text" id="v-num" readonly style="opacity:.6"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="v-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><select id="v-cat"><option value="fuel">Fuel</option><option value="toll">Toll / Road</option><option value="maintenance">Maintenance</option><option value="meals">Driver Meals</option><option value="parking">Parking</option><option value="stationery">Stationery</option><option value="other">Other</option></select></div>
+      <div class="form-group"><label>Linked Job # (optional)</label><select id="v-job"><option value="">— None —</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Description / Purpose</label><textarea id="v-desc" placeholder="Describe what the cash is for..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Requested By</label><input type="text" id="v-by" placeholder="Name / Driver"></div>
+      <div class="form-group"><label>Amount (AED)</label><input type="number" id="v-amount" placeholder="0.00"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>📎 Attach Receipt / Photo</label>
+      <div class="upload-drop" onclick="document.getElementById('v-photo-input').click()">
+        <div id="v-photo-label" style="color:var(--text2);font-size:12px">🖼 Click to upload image (JPG, PNG, PDF)</div>
+        <img id="v-photo-preview" style="display:none;max-width:100%;max-height:160px;margin-top:8px;border-radius:4px">
+      </div>
+      <input type="file" id="v-photo-input" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this,'v-photo-label','v-photo-preview','voucherPhotoData')">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveVoucher()">Submit Voucher</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-voucher')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW VOUCHER -->
+<div class="modal-overlay" id="modal-view-voucher">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-view-voucher')">×</button>
+    <div class="modal-title">Voucher Details</div>
+    <div id="view-voucher-content"></div>
+    <div class="btn-row">
+      <button id="btn-approve" class="btn btn-success btn-sm" onclick="approveVoucher(true)">✓ Approve</button>
+      <button id="btn-reject" class="btn btn-danger btn-sm" onclick="approveVoucher(false)">✗ Reject</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-voucher')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-receipt')">×</button>
+    <div class="modal-title">Add Receipt / Expense</div>
+    <div class="form-row">
+      <div class="form-group"><label>Receipt Number</label><input type="text" id="r-num" readonly style="opacity:.6"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="r-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><select id="r-cat"><option value="fuel">Fuel</option><option value="toll">Toll / Road</option><option value="maintenance">Maintenance</option><option value="meals">Driver Meals</option><option value="parking">Parking</option><option value="other">Other</option></select></div>
+      <div class="form-group"><label>Vendor / Supplier</label><input type="text" id="r-vendor" placeholder="ENOC, Salik..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Linked Job #</label><select id="r-job"><option value="">— None —</option></select></div>
+      <div class="form-group"><label>Driver / Staff</label><select id="r-driver"><option value="">— None —</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px"><label>Description</label><textarea id="r-desc" placeholder="Details of purchase..."></textarea></div>
+    <div class="form-group" style="margin-bottom:10px"><label>Amount (AED)</label><input type="number" id="r-amount" placeholder="0.00"></div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>📎 Attach Receipt Photo / PDF</label>
+      <div class="upload-drop" onclick="document.getElementById('r-photo-input').click()">
+        <div id="r-photo-label" style="color:var(--text2);font-size:12px">🖼 Click to upload receipt image (JPG, PNG, PDF)</div>
+        <img id="r-photo-preview" style="display:none;max-width:100%;max-height:150px;margin-top:8px;border-radius:4px">
+      </div>
+      <input type="file" id="r-photo-input" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this,'r-photo-label','r-photo-preview','receiptPhotoData')">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveReceipt()">Save Receipt</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-receipt')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal" style="max-width:520px">
+    <button class="modal-close" onclick="closeModal('modal-export')">×</button>
+    <div class="modal-title">⬇ Export Booking Report</div>
+    <div style="margin-bottom:14px;font-size:12px;color:var(--text2)">Filter bookings by date range then download as <b style="color:var(--text)">Excel (.xlsx)</b> or <b style="color:var(--text)">PDF</b> directly to your PC.</div>
+    <div class="form-row">
+      <div class="form-group"><label>Date From</label><input type="date" id="exp-from" oninput="updateExportPreview()"></div>
+      <div class="form-group"><label>Date To</label><input type="date" id="exp-to" oninput="updateExportPreview()"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status Filter</label><select id="exp-status" onchange="updateExportPreview()"><option value="">All Statuses</option><option value="pending">Pending</option><option value="active">Active</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+      <div class="form-group"><label>Driver Filter</label><select id="exp-driver" onchange="updateExportPreview()"><option value="">All Drivers</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Truck Filter</label><select id="exp-truck" onchange="updateExportPreview()"><option value="">All Trucks</option></select></div>
+      <div class="form-group"><label>Ownership</label><select id="exp-owner" onchange="updateExportPreview()"><option value="">GSI + 3rd Party</option><option value="gsi">GSI Only</option><option value="3rdparty">3rd Party Only</option></select></div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin:12px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span id="exp-count-label" style="font-size:12px;color:var(--text2)">Select a date range to preview</span>
+      <span id="exp-total-label" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--success)"></span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-success" onclick="exportExcel()">📊 Download Excel (.xlsx)</button>
+      <button class="btn btn-blue" onclick="exportPDF()">📄 Download PDF</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-export')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+</div>
+<div id="toast"></div>
+<script>
+
+// ============================================================
+// DATA STORE
+// ============================================================
+let data = {
+  bookings:[], drivers:[], trucks:[], vouchers:[], receipts:[],
+  clients:[], vendors:[],
+  jobCounter:1001, voucherCounter:1001, receiptCounter:1001,
+  clientCounter:1001, vendorCounter:1001
+};
+let editBookingId=null, editDriverId=null, editTruckId=null;
+let editClientId=null, editVendorId=null, viewVoucherId=null;
+let bookingDocData=null, voucherPhotoData=null, receiptPhotoData=null;
+
+function save(){ /* API handles persistence */ }
+
+// ============================================================
+// SAMPLE DATA
+// ============================================================
+function _initSample_disabled(){
+  if(data.drivers.length) return;
+  data.drivers=[
+    {id:'d1',name:'Mohammed Al Rashid',ic:'UAE-784-1985-1234567-1',phone:'+971 50 123 4567',license:'heavyduty',expiry:'2026-06-30',status:'available',cicpa:'cicpa',cicpaExpiry:'2026-03-31'},
+    {id:'d2',name:'Rajan Kumar',ic:'UAE-784-1979-9876543-2',phone:'+971 55 987 6543',license:'flatbed',expiry:'2025-12-31',status:'on-trip',cicpa:'non-cicpa',cicpaExpiry:''},
+    {id:'d3',name:'Lim Ah Kow',ic:'UAE-784-1988-5554321-3',phone:'+971 52 555 4321',license:'3ton',expiry:'2027-03-15',status:'available',cicpa:'cicpa',cicpaExpiry:'2025-09-30'}
+  ];
+  data.vendors=[
+    {id:'vn1',num:'VND-1001',name:'Al Habtoor Transport LLC',cat:'transport',contact:'Ahmad Hassan',phone:'+971 4 234 5678',email:'ops@alhabtoor.ae',trn:'100-1234-5678-001',terms:'net30',status:'active',notes:'Dubai based'},
+    {id:'vn2',num:'VND-1002',name:'ENOC Fleet Services',cat:'fuel',contact:'Khalid Al Mansoori',phone:'+971 4 314 0000',email:'fleet@enoc.com',trn:'100-9876-5432-002',terms:'net15',status:'active',notes:'Fuel card'}
+  ];
+  data.trucks=[
+    {id:'t1',plate:'Dubai A 12345',model:'Hino 500',type:'Box Truck',capacity:'5',roadtax:'2025-12-31',status:'available',owner:'gsi',vendorId:''},
+    {id:'t2',plate:'Sharjah P 67890',model:'Isuzu ELF',type:'Flatbed',capacity:'3',roadtax:'2026-03-31',status:'in-use',owner:'3rdparty',vendorId:'vn1'},
+    {id:'t3',plate:'Abu Dhabi T 55512',model:'Mercedes Actros',type:'Container',capacity:'20',roadtax:'2025-09-30',status:'available',owner:'gsi',vendorId:''}
+  ];
+  data.clients=[
+    {id:'cl1',num:'CLT-1001',type:'company',name:'Al Futtaim Logistics LLC',contact:'Sara Al Maktoum',phone:'+971 4 123 4567',email:'logistics@alfuttaim.ae',trn:'100-2345-6789-001',address:'Festival City, Dubai',credit:'50000',terms:'net30',notes:''},
+    {id:'cl2',num:'CLT-1002',type:'company',name:'Emaar Construction',contact:'James Wong',phone:'+971 50 888 7777',email:'projects@emaar.ae',trn:'100-3456-7890-002',address:'Downtown Dubai',credit:'30000',terms:'net15',notes:''},
+    {id:'cl3',num:'CLT-1003',type:'government',name:'ADNOC Distribution',contact:'Fatima Al Zaabi',phone:'+971 2 998 8776',email:'supply@adnoc.ae',trn:'GOV-001-ADNOC',address:'Corniche, Abu Dhabi',credit:'100000',terms:'net60',notes:''}
+  ];
+  data.bookings=[
+    {id:'b1',job:'GSI-1001',date:'2025-04-28',client:'Al Futtaim Logistics LLC',contact:'+971 4 123 4567',from:'Dubai Jebel Ali',to:'Abu Dhabi ICAD',pickup:'2025-04-28T08:00',delivery:'2025-04-28T14:00',truck:'t1',driver:'d1',cargo:'FMCG Goods',weight:'4.5',amount:'1800',status:'completed',notes:'',doc:null},
+    {id:'b2',job:'GSI-1002',date:'2025-04-29',client:'Emaar Construction',contact:'+971 50 888 7777',from:'Dubai Creek',to:'Sharjah Industrial',pickup:'2025-04-29T09:00',delivery:'2025-04-29T13:00',truck:'t2',driver:'d2',cargo:'Construction Steel',weight:'2.8',amount:'950',status:'active',notes:'Handle with care',doc:null},
+    {id:'b3',job:'GSI-1003',date:'2025-04-30',client:'ADNOC Distribution',contact:'+971 2 998 8776',from:'Abu Dhabi Port',to:'Al Ain',pickup:'2025-04-30T07:00',delivery:'2025-04-30T15:00',truck:'t3',driver:'d3',cargo:'Industrial Equipment',weight:'18',amount:'4200',status:'pending',notes:'Heavy load permit',doc:null}
+  ];
+  data.vouchers=[
+    {id:'v1',num:'PCV-1001',date:'2025-04-28',cat:'fuel',desc:'Diesel top-up Dubai A 12345',by:'Mohammed Al Rashid',amount:'250',job:'GSI-1001',status:'approved',photo:null},
+    {id:'v2',num:'PCV-1002',date:'2025-04-29',cat:'toll',desc:'Salik toll charges',by:'Rajan Kumar',amount:'68',job:'GSI-1002',status:'review',photo:null},
+    {id:'v3',num:'PCV-1003',date:'2025-04-30',cat:'meals',desc:'Driver meals Al Ain trip',by:'Mohammed Al Rashid',amount:'45',job:'GSI-1001',status:'approved',photo:null}
+  ];
+  data.receipts=[
+    {id:'r1',num:'RCP-1001',date:'2025-04-28',cat:'fuel',vendor:'ENOC Jebel Ali',job:'GSI-1001',driver:'d1',desc:'Full tank diesel',amount:'250',photo:null},
+    {id:'r2',num:'RCP-1002',date:'2025-04-29',cat:'toll',vendor:'Salik RTA',job:'GSI-1002',driver:'d2',desc:'Salik toll recharge',amount:'68',photo:null}
+  ];
+  data.jobCounter=1004; data.voucherCounter=1004; data.receiptCounter=1003;
+  data.clientCounter=1004; data.vendorCounter=1003;
+  save();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',3000);
+}
+function genId(){ return '_'+Math.random().toString(36).substr(2,9); }
+function fmtDate(d){ if(!d) return '—'; try{return new Date(d+'T00:00:00').toLocaleDateString('en-AE',{day:'2-digit',month:'short',year:'numeric'});}catch(e){return d;} }
+function fmtDT(d){ if(!d) return '—'; try{return new Date(d).toLocaleString('en-AE',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return d;} }
+function fmtAmt(a){ return 'AED '+parseFloat(a||0).toFixed(2); }
+function badgeHtml(s){
+  const map={pending:'badge-pending',active:'badge-active',completed:'badge-completed',cancelled:'badge-cancelled',approved:'badge-approved',rejected:'badge-rejected',review:'badge-review'};
+  const lbl={pending:'Pending',active:'Active',completed:'Completed',cancelled:'Cancelled',approved:'Approved',rejected:'Rejected',review:'Under Review'};
+  return `<span class="badge ${map[s]||''}">${lbl[s]||s}</span>`;
+}
+function getDriver(id){ return data.drivers.find(d=>d.id===id)||null; }
+function getTruck(id){ return data.trucks.find(t=>t.id===id)||null; }
+function driverName(id){ const d=getDriver(id); return d?d.name:'—'; }
+function truckPlate(id){ const t=getTruck(id); return t?t.plate:'—'; }
+function vendorName(id){ const v=data.vendors.find(x=>x.id===id); return v?v.name:'—'; }
+function isExpired(d){ return d && new Date(d)<new Date(); }
+
+// ============================================================
+// FILE UPLOAD — unified handler
+// ============================================================
+function handleFileUpload(input, labelId, previewId, varName){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const result=e.target.result;
+    if(varName==='bookingDocData') bookingDocData=result;
+    else if(varName==='voucherPhotoData') voucherPhotoData=result;
+    else if(varName==='receiptPhotoData') receiptPhotoData=result;
+    const lbl=document.getElementById(labelId);
+    const prv=document.getElementById(previewId);
+    if(file.type.startsWith('image/')){
+      prv.src=result; prv.style.display='block';
+      lbl.textContent='✅ '+file.name;
+    } else {
+      prv.style.display='none';
+      lbl.textContent='📄 '+file.name+' attached';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+function resetUpload(labelId, previewId, varName, defaultText){
+  if(varName==='bookingDocData') bookingDocData=null;
+  else if(varName==='voucherPhotoData') voucherPhotoData=null;
+  else if(varName==='receiptPhotoData') receiptPhotoData=null;
+  const lbl=document.getElementById(labelId); if(lbl) lbl.textContent=defaultText;
+  const prv=document.getElementById(previewId); if(prv){prv.src='';prv.style.display='none';}
+}
+
+// ============================================================
+// MODAL — simple, reliable
+// ============================================================
+function openModal(id){
+  const el=document.getElementById(id);
+  if(!el){ console.error('Modal not found:',id); return; }
+  el.style.display='flex';
+  el.classList.add('open');
+}
+function closeModal(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.style.display='none';
+  el.classList.remove('open');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function switchPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const pg=document.getElementById('page-'+page);
+  if(!pg) return;
+  pg.classList.add('active');
+  const tabs=document.querySelectorAll('.nav-tab');
+  const map=['dashboard','bookings','drivers','trucks','pettycash','tracking'];
+  const idx=map.indexOf(page);
+  if(tabs[idx]) tabs[idx].classList.add('active');
+  if(page==='dashboard') renderDashboard();
+  if(page==='bookings'){ renderBookings(); renderClients(); }
+  if(page==='drivers'){ renderDrivers(); renderVendors(); }
+  if(page==='trucks') renderTrucks();
+  if(page==='pettycash'){ renderCashStats(); renderVouchers(); renderReceipts(); renderCashBook(); }
+}
+function switchBookingTab(tab){
+  document.getElementById('btab-jobs').classList.toggle('active',tab==='jobs');
+  document.getElementById('btab-clients').classList.toggle('active',tab==='clients');
+  document.querySelectorAll('#page-bookings .page-tab').forEach((el,i)=>el.classList.toggle('active',i===['jobs','clients'].indexOf(tab)));
+  if(tab==='clients') renderClients();
+}
+function switchDriverTab(tab){
+  document.getElementById('dtab-drivers').classList.toggle('active',tab==='drivers');
+  document.getElementById('dtab-vendors').classList.toggle('active',tab==='vendors');
+  document.querySelectorAll('#page-drivers .page-tab').forEach((el,i)=>el.classList.toggle('active',i===['drivers','vendors'].indexOf(tab)));
+  if(tab==='vendors') renderVendors();
+}
+function switchCashTab(tab){
+  ['vouchers','receipts','cashbook'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  document.querySelectorAll('#page-pettycash .page-tab').forEach((el,i)=>el.classList.toggle('active',i===['vouchers','receipts','cashbook'].indexOf(tab)));
+  if(tab==='cashbook') renderCashBook();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-AE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const active=data.bookings.filter(b=>b.status==='active').length;
+  const pending=data.bookings.filter(b=>b.status==='pending').length;
+  const avail=data.drivers.filter(d=>d.status==='available').length;
+  const rev=data.bookings.filter(b=>b.status==='completed').reduce((s,b)=>s+parseFloat(b.amount||0),0);
+  const cashOut=data.vouchers.filter(v=>v.status==='approved').reduce((s,v)=>s+parseFloat(v.amount||0),0);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card orange"><div class="stat-label">Active Jobs</div><div class="stat-value">${active}</div></div>
+    <div class="stat-card blue"><div class="stat-label">Pending</div><div class="stat-value">${pending}</div></div>
+    <div class="stat-card green"><div class="stat-label">Available Drivers</div><div class="stat-value">${avail}</div></div>
+    <div class="stat-card green"><div class="stat-label">Revenue (Completed)</div><div class="stat-value" style="font-size:18px">${fmtAmt(rev)}</div></div>
+    <div class="stat-card red"><div class="stat-label">Petty Cash Out</div><div class="stat-value" style="font-size:18px">${fmtAmt(cashOut)}</div></div>`;
+  document.getElementById('dash-bookings-body').innerHTML=[...data.bookings].reverse().slice(0,5).map(b=>`
+    <tr><td><b>${b.job}</b></td><td>${b.client}</td><td>${b.from}→${b.to}</td><td>${driverName(b.driver)}</td><td>${badgeHtml(b.status)}</td></tr>`).join('');
+  document.getElementById('dash-cash-body').innerHTML=[...data.vouchers].reverse().slice(0,5).map(v=>`
+    <tr><td><b>${v.num}</b></td><td>${v.desc.substring(0,28)}</td><td>${fmtAmt(v.amount)}</td><td>${badgeHtml(v.status)}</td></tr>`).join('');
+}
+
+// ============================================================
+// BOOKINGS
+// ============================================================
+function populateBookingDropdowns(){
+  document.getElementById('b-truck').innerHTML=data.trucks.map(t=>`<option value="${t.id}">${t.plate} (${t.type}) [${t.owner==='gsi'?'GSI':vendorName(t.vendorId)}]</option>`).join('');
+  document.getElementById('b-driver').innerHTML=data.drivers.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+}
+function openBookingModal(id=null){
+  editBookingId=id;
+  populateBookingDropdowns();
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('modal-booking-title').textContent=id?'Edit Booking':'New Truck Booking';
+  if(id){
+    const b=data.bookings.find(x=>x.id===id);
+    if(!b) return;
+    document.getElementById('b-job').value=b.job;
+    document.getElementById('b-date').value=b.date;
+    document.getElementById('b-client').value=b.client;
+    document.getElementById('b-contact').value=b.contact||'';
+    document.getElementById('b-from').value=b.from;
+    document.getElementById('b-to').value=b.to;
+    document.getElementById('b-pickup').value=b.pickup||'';
+    document.getElementById('b-delivery').value=b.delivery||'';
+    document.getElementById('b-truck').value=b.truck||'';
+    document.getElementById('b-driver').value=b.driver||'';
+    document.getElementById('b-cargo').value=b.cargo||'';
+    document.getElementById('b-weight').value=b.weight||'';
+    document.getElementById('b-amount').value=b.amount||'';
+    document.getElementById('b-status').value=b.status||'pending';
+    document.getElementById('b-notes').value=b.notes||'';
+    bookingDocData=b.doc||null;
+    const prv=document.getElementById('b-doc-preview');
+    const lbl=document.getElementById('b-doc-label');
+    if(b.doc&&b.doc.startsWith('data:image')){ prv.src=b.doc; prv.style.display='block'; lbl.textContent='✅ Delivery note attached'; }
+    else if(b.doc){ prv.style.display='none'; lbl.textContent='📄 Document attached'; }
+    else { resetUpload('b-doc-label','b-doc-preview','bookingDocData','🖼 Click to upload Delivery Note (JPG, PNG, PDF)'); }
+  } else {
+    document.getElementById('b-job').value='GSI-'+data.jobCounter;
+    document.getElementById('b-date').value=today;
+    ['b-client','b-contact','b-from','b-to','b-pickup','b-delivery','b-cargo','b-weight','b-amount','b-notes'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('b-status').value='pending';
+    resetUpload('b-doc-label','b-doc-preview','bookingDocData','🖼 Click to upload Delivery Note (JPG, PNG, PDF)');
+    document.getElementById('b-doc-input').value='';
+  }
+  openModal('modal-booking');
+}
+function saveBooking(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('b-client')){ alert('Please enter a Client / Company Name.'); return; }
+  if(!g('b-from')){ alert('Please enter a Pickup Location.'); return; }
+  if(!g('b-to')){ alert('Please enter a Delivery Location.'); return; }
+  const fields={
+    date:g('b-date'),client:g('b-client'),contact:g('b-contact'),
+    from:g('b-from'),to:g('b-to'),pickup:g('b-pickup'),delivery:g('b-delivery'),
+    truck:g('b-truck'),driver:g('b-driver'),cargo:g('b-cargo'),
+    weight:g('b-weight'),amount:g('b-amount'),status:g('b-status'),
+    notes:g('b-notes'),doc:bookingDocData||null
+  };
+  if(editBookingId){
+    Object.assign(data.bookings.find(x=>x.id===editBookingId),fields);
+  } else {
+    data.bookings.push({id:genId(),job:'GSI-'+data.jobCounter++,...fields});
+  }
+  save(); closeModal('modal-booking'); renderBookings(); renderDashboard(); showToast('Booking saved!');
+}
+function renderBookings(){
+  const search=(document.getElementById('booking-search')?.value||'').toLowerCase();
+  const sf=document.getElementById('booking-filter-status')?.value||'';
+  const df=document.getElementById('booking-filter-driver');
+  if(df&&df.options.length<=1) data.drivers.forEach(d=>{const o=document.createElement('option');o.value=d.id;o.textContent=d.name;df.appendChild(o);});
+  const driverF=df?.value||'';
+  const list=data.bookings.filter(b=>{
+    if(search&&!b.job.toLowerCase().includes(search)&&!b.client.toLowerCase().includes(search)&&!b.from.toLowerCase().includes(search)&&!b.to.toLowerCase().includes(search)) return false;
+    if(sf&&b.status!==sf) return false;
+    if(driverF&&b.driver!==driverF) return false;
+    return true;
+  });
+  document.getElementById('bookings-body').innerHTML=list.length?[...list].reverse().map(b=>`
+    <tr>
+      <td><b style="color:var(--accent)">${b.job}</b></td>
+      <td>${fmtDate(b.date)}</td><td>${b.client}</td>
+      <td>${b.from}</td><td>${b.to}</td>
+      <td style="font-size:11px">${truckPlate(b.truck)}</td>
+      <td>${driverName(b.driver)}</td>
+      <td style="font-size:11px">${b.cargo||'—'}</td>
+      <td>${fmtAmt(b.amount)}</td>
+      <td>${badgeHtml(b.status)}</td>
+      <td style="text-align:center">${b.doc?'📎':'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="viewBooking('${b.id}')">View</button>
+        <button class="btn btn-blue btn-sm" onclick="openBookingModal('${b.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBooking('${b.id}')">Del</button>
+      </td>
+    </tr>`).join(''):'<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:28px">No bookings found</td></tr>';
+}
+function viewBooking(id){
+  const b=data.bookings.find(x=>x.id===id);
+  const d=getDriver(b.driver); const t=getTruck(b.truck);
+  document.getElementById('view-booking-content').innerHTML=`
+    <div class="receipt-box">
+      <div style="text-align:center;margin-bottom:10px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--accent)">JOB ORDER</div><div style="font-size:12px;color:var(--text2)">GSI FleetOps Logistics</div></div>
+      <div class="r-row"><span class="r-label">Job Number</span><b>${b.job}</b></div>
+      <div class="r-row"><span class="r-label">Date</span>${fmtDate(b.date)}</div>
+      <div class="r-row"><span class="r-label">Status</span>${badgeHtml(b.status)}</div>
+      <div class="r-row"><span class="r-label">Client</span>${b.client}</div>
+      <div class="r-row"><span class="r-label">Contact</span>${b.contact||'—'}</div>
+      <div class="r-row"><span class="r-label">From</span>${b.from}</div>
+      <div class="r-row"><span class="r-label">To</span>${b.to}</div>
+      <div class="r-row"><span class="r-label">Pickup</span>${fmtDT(b.pickup)}</div>
+      <div class="r-row"><span class="r-label">Delivery</span>${fmtDT(b.delivery)}</div>
+      <div class="r-row"><span class="r-label">Truck</span>${t?t.plate+' — '+t.type:'—'}</div>
+      <div class="r-row"><span class="r-label">Driver</span>${d?d.name+' ('+d.phone+')':'—'}</div>
+      <div class="r-row"><span class="r-label">Cargo</span>${b.cargo||'—'}</div>
+      <div class="r-row"><span class="r-label">Weight</span>${b.weight?b.weight+' tons':'—'}</div>
+      ${b.notes?`<div class="r-row"><span class="r-label">Remarks</span>${b.notes}</div>`:''}
+      <div class="r-total">${fmtAmt(b.amount)}</div>
+      ${b.doc?`<div style="margin-top:10px"><div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">📎 Delivery Note</div>${b.doc.startsWith('data:image')?`<img src="${b.doc}" style="max-width:100%;border-radius:4px;border:1px solid var(--border)">`:'<div style="color:var(--accent2);font-size:12px">📄 Document attached</div>'}</div>`:''}
+    </div>`;
+  openModal('modal-view-booking');
+}
+function deleteBooking(id){
+  if(!confirm('Delete this booking?')) return;
+  data.bookings=data.bookings.filter(b=>b.id!==id);
+  save(); renderBookings(); showToast('Booking deleted');
+}
+
+// ============================================================
+// CLIENTS
+// ============================================================
+function openClientModal(id=null){
+  editClientId=id;
+  const typeL={company:'🏢 Company',individual:'👤 Individual',government:'🏛 Government'};
+  if(id){
+    const c=data.clients.find(x=>x.id===id);
+    document.getElementById('cl-id').value=c.num;
+    document.getElementById('cl-type').value=c.type;
+    document.getElementById('cl-name').value=c.name;
+    document.getElementById('cl-contact').value=c.contact||'';
+    document.getElementById('cl-phone').value=c.phone||'';
+    document.getElementById('cl-email').value=c.email||'';
+    document.getElementById('cl-trn').value=c.trn||'';
+    document.getElementById('cl-address').value=c.address||'';
+    document.getElementById('cl-credit').value=c.credit||'';
+    document.getElementById('cl-terms').value=c.terms||'net30';
+    document.getElementById('cl-notes').value=c.notes||'';
+  } else {
+    ['cl-name','cl-contact','cl-phone','cl-email','cl-trn','cl-address','cl-credit','cl-notes'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('cl-id').value='CLT-'+data.clientCounter;
+    document.getElementById('cl-type').value='company';
+    document.getElementById('cl-terms').value='net30';
+  }
+  openModal('modal-client');
+}
+function saveClient(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('cl-name')){ alert('Company/Name required'); return; }
+  const obj={num:g('cl-id'),type:g('cl-type'),name:g('cl-name'),contact:g('cl-contact'),phone:g('cl-phone'),email:g('cl-email'),trn:g('cl-trn'),address:g('cl-address'),credit:g('cl-credit'),terms:g('cl-terms'),notes:g('cl-notes')};
+  if(editClientId){ Object.assign(data.clients.find(c=>c.id===editClientId),obj); }
+  else { data.clients.push({id:genId(),num:'CLT-'+data.clientCounter++,...obj}); }
+  save(); closeModal('modal-client'); renderClients(); showToast('Client saved!');
+}
+function renderClients(){
+  const search=(document.getElementById('client-search')?.value||'').toLowerCase();
+  const filt=document.getElementById('client-filter')?.value||'';
+  const typeL={company:'🏢 Company',individual:'👤 Individual',government:'🏛 Government'};
+  const list=data.clients.filter(c=>(!search||(c.name+c.contact+c.trn).toLowerCase().includes(search))&&(!filt||c.type===filt));
+  document.getElementById('clients-body').innerHTML=list.length?list.map(c=>{
+    const jobs=data.bookings.filter(b=>b.client===c.name).length;
+    return `<tr>
+      <td><b style="color:var(--accent)">${c.num}</b></td><td><b>${c.name}</b></td>
+      <td>${typeL[c.type]||c.type}</td><td>${c.contact||'—'}</td><td>${c.phone||'—'}</td>
+      <td style="font-size:11px">${c.email||'—'}</td><td style="font-size:11px">${c.trn||'—'}</td>
+      <td><span class="badge badge-active">${jobs}</span></td>
+      <td><button class="btn btn-blue btn-sm" onclick="openClientModal('${c.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteClient('${c.id}')">Del</button></td>
+    </tr>`}).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">No clients found</td></tr>';
+}
+function deleteClient(id){ if(!confirm('Delete client?')) return; data.clients=data.clients.filter(c=>c.id!==id); save(); renderClients(); showToast('Client deleted'); }
+
+// ============================================================
+// DRIVERS
+// ============================================================
+function openDriverModal(id=null){
+  editDriverId=id;
+  if(id){
+    const d=data.drivers.find(x=>x.id===id);
+    document.getElementById('d-name').value=d.name;
+    document.getElementById('d-ic').value=d.ic||'';
+    document.getElementById('d-phone').value=d.phone||'';
+    document.getElementById('d-license').value=d.license||'3ton';
+    document.getElementById('d-expiry').value=d.expiry||'';
+    document.getElementById('d-status').value=d.status||'available';
+    document.getElementById('d-cicpa').value=d.cicpa||'non-cicpa';
+    document.getElementById('d-cicpa-expiry').value=d.cicpaExpiry||'';
+  } else {
+    ['d-name','d-ic','d-phone','d-expiry','d-cicpa-expiry'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('d-license').value='3ton';
+    document.getElementById('d-status').value='available';
+    document.getElementById('d-cicpa').value='non-cicpa';
+  }
+  openModal('modal-driver');
+}
+function saveDriver(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('d-name')){ alert('Name required'); return; }
+  const obj={name:g('d-name'),ic:g('d-ic'),phone:g('d-phone'),license:g('d-license'),expiry:g('d-expiry'),status:g('d-status'),cicpa:g('d-cicpa'),cicpaExpiry:g('d-cicpa-expiry')};
+  if(editDriverId){ Object.assign(data.drivers.find(d=>d.id===editDriverId),obj); }
+  else { data.drivers.push({id:genId(),...obj}); }
+  save(); closeModal('modal-driver'); renderDrivers(); showToast('Driver saved!');
+}
+function renderDrivers(){
+  const sc={available:'var(--success)','on-trip':'var(--accent2)',off:'var(--text3)'};
+  const sl={available:'Available','on-trip':'On Trip',off:'Off Duty'};
+  const ll={'3ton':'3 Ton Pickup','heavyduty':'Heavy Duty','flatbed':'Normal Flatbed'};
+  document.getElementById('drivers-grid').innerHTML=data.drivers.map(d=>{
+    const cc=d.cicpa==='cicpa'?'var(--success)':'var(--text3)';
+    const cexp=isExpired(d.cicpaExpiry)&&d.cicpa==='cicpa';
+    return `<div class="driver-card">
+      <div class="driver-status-badge"><span class="badge" style="background:${sc[d.status]}22;color:${sc[d.status]};border:1px solid ${sc[d.status]}44">${sl[d.status]||d.status}</span></div>
+      <div class="driver-avatar">${d.name.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
+      <div class="driver-name">${d.name}</div>
+      <div class="driver-info">🪪 ${ll[d.license]||d.license}</div>
+      <div class="driver-info">📱 ${d.phone||'—'}</div>
+      <div class="driver-info">🆔 ${d.ic||'—'}</div>
+      <div class="driver-info" style="${isExpired(d.expiry)?'color:var(--danger)':''}">📅 Lic: ${fmtDate(d.expiry)}${isExpired(d.expiry)?' ⚠️':''}</div>
+      <div class="driver-info" style="margin-top:5px"><span style="background:${cc}22;color:${cc};border:1px solid ${cc}44;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700">${d.cicpa==='cicpa'?'CICPA Pass':'Non-CICPA'}</span></div>
+      ${d.cicpa==='cicpa'&&d.cicpaExpiry?`<div class="driver-info" style="${cexp?'color:var(--danger)':''}">📅 CICPA: ${fmtDate(d.cicpaExpiry)}${cexp?' ⚠️ EXPIRED':''}</div>`:''}
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-blue btn-sm" onclick="openDriverModal('${d.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDriver('${d.id}')">Remove</button>
+      </div>
+    </div>`}).join('')||'<div style="color:var(--text3);padding:18px">No drivers added.</div>';
+}
+function deleteDriver(id){ if(!confirm('Remove driver?')) return; data.drivers=data.drivers.filter(d=>d.id!==id); save(); renderDrivers(); showToast('Driver removed'); }
+
+// ============================================================
+// VENDORS
+// ============================================================
+function openVendorModal(id=null){
+  editVendorId=id;
+  if(id){
+    const v=data.vendors.find(x=>x.id===id);
+    document.getElementById('vn-id').value=v.num;
+    document.getElementById('vn-cat').value=v.cat;
+    document.getElementById('vn-name').value=v.name;
+    document.getElementById('vn-contact').value=v.contact||'';
+    document.getElementById('vn-phone').value=v.phone||'';
+    document.getElementById('vn-email').value=v.email||'';
+    document.getElementById('vn-trn').value=v.trn||'';
+    document.getElementById('vn-terms').value=v.terms||'net30';
+    document.getElementById('vn-status').value=v.status||'active';
+    document.getElementById('vn-notes').value=v.notes||'';
+  } else {
+    ['vn-name','vn-contact','vn-phone','vn-email','vn-trn','vn-notes'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('vn-id').value='VND-'+data.vendorCounter;
+    document.getElementById('vn-cat').value='transport';
+    document.getElementById('vn-terms').value='net30';
+    document.getElementById('vn-status').value='active';
+  }
+  openModal('modal-vendor');
+}
+function saveVendor(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('vn-name')){ alert('Company name required'); return; }
+  const obj={num:g('vn-id'),cat:g('vn-cat'),name:g('vn-name'),contact:g('vn-contact'),phone:g('vn-phone'),email:g('vn-email'),trn:g('vn-trn'),terms:g('vn-terms'),status:g('vn-status'),notes:g('vn-notes')};
+  if(editVendorId){ Object.assign(data.vendors.find(v=>v.id===editVendorId),obj); }
+  else { data.vendors.push({id:genId(),num:'VND-'+data.vendorCounter++,...obj}); }
+  save(); closeModal('modal-vendor'); renderVendors(); showToast('Vendor saved!');
+}
+function renderVendors(){
+  const search=(document.getElementById('vendor-search')?.value||'').toLowerCase();
+  const filt=document.getElementById('vendor-filter')?.value||'';
+  const cl={transport:'🚛 Transport',fuel:'⛽ Fuel',maintenance:'🔧 Maintenance',tyres:'🔄 Tyres',insurance:'🛡 Insurance',other:'📦 Other'};
+  const sm={active:'badge-completed',inactive:'badge-pending',blacklisted:'badge-cancelled'};
+  const list=data.vendors.filter(v=>(!search||(v.name+v.contact).toLowerCase().includes(search))&&(!filt||v.cat===filt));
+  document.getElementById('vendors-body').innerHTML=list.length?list.map(v=>{
+    const tc=data.trucks.filter(t=>t.vendorId===v.id).length;
+    return `<tr>
+      <td><b style="color:var(--accent)">${v.num}</b></td>
+      <td><b>${v.name}</b>${tc?` <span style="font-size:10px;color:var(--accent2)">(${tc} truck${tc>1?'s':''})</span>`:''}</td>
+      <td>${cl[v.cat]||v.cat}</td><td>${v.contact||'—'}</td><td>${v.phone||'—'}</td>
+      <td style="font-size:11px">${v.trn||'—'}</td><td style="font-size:11px">${v.terms}</td>
+      <td><span class="badge ${sm[v.status]||''}">${v.status}</span></td>
+      <td><button class="btn btn-blue btn-sm" onclick="openVendorModal('${v.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteVendor('${v.id}')">Del</button></td>
+    </tr>`}).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">No vendors found</td></tr>';
+}
+function deleteVendor(id){ if(!confirm('Delete vendor?')) return; data.vendors=data.vendors.filter(v=>v.id!==id); save(); renderVendors(); showToast('Vendor deleted'); }
+
+// ============================================================
+// TRUCKS
+// ============================================================
+function toggleTruckVendor(){
+  const is3rd=document.getElementById('t-owner').value==='3rdparty';
+  document.getElementById('t-vendor-group').style.display=is3rd?'':'none';
+}
+function openTruckModal(id=null){
+  editTruckId=id;
+  document.getElementById('t-vendor').innerHTML='<option value="">— Select Vendor —</option>'+data.vendors.filter(v=>v.cat==='transport'||v.cat==='other').map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  if(id){
+    const t=data.trucks.find(x=>x.id===id);
+    document.getElementById('t-plate').value=t.plate;
+    document.getElementById('t-model').value=t.model;
+    document.getElementById('t-type').value=t.type;
+    document.getElementById('t-capacity').value=t.capacity;
+    document.getElementById('t-roadtax').value=t.roadtax||'';
+    document.getElementById('t-status').value=t.status;
+    document.getElementById('t-owner').value=t.owner||'gsi';
+    document.getElementById('t-vendor').value=t.vendorId||'';
+    toggleTruckVendor();
+  } else {
+    ['t-plate','t-model','t-capacity','t-roadtax'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('t-status').value='available';
+    document.getElementById('t-owner').value='gsi';
+    document.getElementById('t-vendor-group').style.display='none';
+  }
+  openModal('modal-truck');
+}
+function saveTruck(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('t-plate')){ alert('Plate number required'); return; }
+  const obj={plate:g('t-plate'),model:g('t-model'),type:g('t-type'),capacity:g('t-capacity'),roadtax:g('t-roadtax'),status:g('t-status'),owner:g('t-owner'),vendorId:g('t-vendor')};
+  if(editTruckId){ Object.assign(data.trucks.find(t=>t.id===editTruckId),obj); }
+  else { data.trucks.push({id:genId(),...obj}); }
+  save(); closeModal('modal-truck'); renderTrucks(); showToast('Truck saved!');
+}
+function renderTrucks(){
+  const search=(document.getElementById('truck-search')?.value||'').toLowerCase();
+  const of=document.getElementById('truck-filter-owner')?.value||'';
+  const sf=document.getElementById('truck-filter-status')?.value||'';
+  const sm={available:'badge-completed','in-use':'badge-active',maintenance:'badge-pending'};
+  const list=data.trucks.filter(t=>(!search||t.plate.toLowerCase().includes(search)||t.model.toLowerCase().includes(search))&&(!of||t.owner===of)&&(!sf||t.status===sf));
+  document.getElementById('trucks-body').innerHTML=list.length?list.map(t=>`
+    <tr>
+      <td><b style="color:var(--accent)">${t.plate}</b></td><td>${t.model}</td><td>${t.type}</td>
+      <td>${t.capacity} tons</td>
+      <td><span class="badge ${t.owner==='gsi'?'badge-active':'badge-pending'}">${t.owner==='gsi'?'GSI':'3rd Party'}</span></td>
+      <td style="font-size:11px">${t.owner==='3rdparty'?vendorName(t.vendorId):'—'}</td>
+      <td style="${isExpired(t.roadtax)?'color:var(--danger)':''}">${fmtDate(t.roadtax)}${isExpired(t.roadtax)?' ⚠️':''}</td>
+      <td><span class="badge ${sm[t.status]||''}">${t.status}</span></td>
+      <td><button class="btn btn-blue btn-sm" onclick="openTruckModal('${t.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteTruck('${t.id}')">Remove</button></td>
+    </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">No trucks found.</td></tr>';
+}
+function deleteTruck(id){ if(!confirm('Remove truck?')) return; data.trucks=data.trucks.filter(t=>t.id!==id); save(); renderTrucks(); showToast('Truck removed'); }
+
+// ============================================================
+// PETTY CASH
+// ============================================================
+function populateCashDropdowns(){
+  ['v-job','r-job'].forEach(sid=>{
+    const el=document.getElementById(sid);
+    if(el) el.innerHTML='<option value="">— None —</option>'+data.bookings.map(b=>`<option value="${b.job}">${b.job} — ${b.client}</option>`).join('');
+  });
+  const rd=document.getElementById('r-driver');
+  if(rd) rd.innerHTML='<option value="">— None —</option>'+data.drivers.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+}
+// VOUCHERS
+function openVoucherModal(){
+  populateCashDropdowns();
+  document.getElementById('v-num').value='PCV-'+data.voucherCounter;
+  document.getElementById('v-date').value=new Date().toISOString().split('T')[0];
+  ['v-desc','v-by','v-amount'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('v-cat').value='fuel';
+  resetUpload('v-photo-label','v-photo-preview','voucherPhotoData','🖼 Click to upload image (JPG, PNG, PDF)');
+  document.getElementById('v-photo-input').value='';
+  openModal('modal-voucher');
+}
+function saveVoucher(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('v-desc')||!g('v-amount')||!g('v-by')){ alert('Please fill in Description, Requested By, and Amount.'); return; }
+  data.vouchers.push({id:genId(),num:'PCV-'+data.voucherCounter++,date:g('v-date'),cat:g('v-cat'),desc:g('v-desc'),by:g('v-by'),amount:g('v-amount'),job:g('v-job'),status:'review',photo:voucherPhotoData||null});
+  save(); closeModal('modal-voucher'); renderVouchers(); renderCashStats(); showToast('Voucher submitted!');
+}
+function renderVouchers(){
+  const search=(document.getElementById('voucher-search')?.value||'').toLowerCase();
+  const filt=document.getElementById('voucher-filter')?.value||'';
+  const cl={fuel:'⛽ Fuel',toll:'🛣 Toll',maintenance:'🔧 Maint',meals:'🍱 Meals',parking:'🅿️ Parking',stationery:'📎 Stat.',other:'📦 Other'};
+  const list=data.vouchers.filter(v=>(!search||v.num.toLowerCase().includes(search)||v.desc.toLowerCase().includes(search))&&(!filt||v.status===filt));
+  document.getElementById('vouchers-body').innerHTML=list.length?[...list].reverse().map(v=>`
+    <tr>
+      <td><b style="color:var(--accent)">${v.num}</b></td><td>${fmtDate(v.date)}</td>
+      <td>${cl[v.cat]||v.cat}</td><td>${v.desc.substring(0,38)}</td><td>${v.by}</td>
+      <td><b>${fmtAmt(v.amount)}</b></td>
+      <td style="text-align:center">${v.photo?'📎':'—'}</td>
+      <td>${badgeHtml(v.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewVoucher('${v.id}')">View</button> <button class="btn btn-danger btn-sm" onclick="deleteVoucher('${v.id}')">Del</button></td>
+    </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">No vouchers found</td></tr>';
+}
+function viewVoucher(id){
+  viewVoucherId=id;
+  const v=data.vouchers.find(x=>x.id===id);
+  const cl={fuel:'Fuel',toll:'Toll/Road',maintenance:'Maintenance',meals:'Driver Meals',parking:'Parking',stationery:'Stationery',other:'Other'};
+  document.getElementById('view-voucher-content').innerHTML=`
+    <div class="receipt-box">
+      <div style="text-align:center;margin-bottom:10px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--accent)">PETTY CASH VOUCHER</div><div style="font-size:12px;color:var(--text2)">GSI FleetOps</div></div>
+      <div class="r-row"><span class="r-label">Voucher No.</span><b>${v.num}</b></div>
+      <div class="r-row"><span class="r-label">Date</span>${fmtDate(v.date)}</div>
+      <div class="r-row"><span class="r-label">Category</span>${cl[v.cat]||v.cat}</div>
+      <div class="r-row"><span class="r-label">Description</span>${v.desc}</div>
+      <div class="r-row"><span class="r-label">Requested By</span>${v.by}</div>
+      ${v.job?`<div class="r-row"><span class="r-label">Job Ref</span>${v.job}</div>`:''}
+      <div class="r-row"><span class="r-label">Status</span>${badgeHtml(v.status)}</div>
+      <div class="r-total">${fmtAmt(v.amount)}</div>
+      ${v.photo?`<div style="margin-top:10px"><div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Attached Receipt</div>${v.photo.startsWith('data:image')?`<img src="${v.photo}" style="max-width:100%;border-radius:4px;border:1px solid var(--border)">`:'<div style="color:var(--accent2)">📄 Document attached</div>'}</div>`:''}
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:11px;color:var(--text3)"><div>Prepared by: ____________</div><div>Approved by: ____________</div></div>
+    </div>`;
+  const show=v.status==='review';
+  document.getElementById('btn-approve').style.display=show?'inline-block':'none';
+  document.getElementById('btn-reject').style.display=show?'inline-block':'none';
+  openModal('modal-view-voucher');
+}
+function approveVoucher(approve){
+  const v=data.vouchers.find(x=>x.id===viewVoucherId);
+  v.status=approve?'approved':'rejected';
+  save(); closeModal('modal-view-voucher'); renderVouchers(); renderCashStats(); showToast(approve?'Voucher approved!':'Voucher rejected');
+}
+function deleteVoucher(id){ if(!confirm('Delete voucher?')) return; data.vouchers=data.vouchers.filter(v=>v.id!==id); save(); renderVouchers(); renderCashStats(); showToast('Voucher deleted'); }
+// RECEIPTS
+function openReceiptModal(){
+  populateCashDropdowns();
+  document.getElementById('r-num').value='RCP-'+data.receiptCounter;
+  document.getElementById('r-date').value=new Date().toISOString().split('T')[0];
+  ['r-vendor','r-desc','r-amount'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('r-cat').value='fuel';
+  resetUpload('r-photo-label','r-photo-preview','receiptPhotoData','🖼 Click to upload receipt image (JPG, PNG, PDF)');
+  document.getElementById('r-photo-input').value='';
+  openModal('modal-receipt');
+}
+function saveReceipt(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('r-amount')){ alert('Amount required'); return; }
+  data.receipts.push({id:genId(),num:'RCP-'+data.receiptCounter++,date:g('r-date'),cat:g('r-cat'),vendor:g('r-vendor'),job:g('r-job'),driver:g('r-driver'),desc:g('r-desc'),amount:g('r-amount'),photo:receiptPhotoData||null});
+  save(); closeModal('modal-receipt'); renderReceipts(); renderCashStats(); showToast('Receipt saved!');
+}
+function renderReceipts(){
+  const search=(document.getElementById('receipt-search')?.value||'').toLowerCase();
+  const filt=document.getElementById('receipt-filter')?.value||'';
+  const cl={fuel:'⛽ Fuel',toll:'🛣 Toll',maintenance:'🔧 Maint',meals:'🍱 Meals',parking:'🅿️ Parking',other:'📦 Other'};
+  const list=data.receipts.filter(r=>(!search||r.num.toLowerCase().includes(search)||(r.vendor||'').toLowerCase().includes(search)||(r.desc||'').toLowerCase().includes(search))&&(!filt||r.cat===filt));
+  document.getElementById('receipts-body').innerHTML=list.length?[...list].reverse().map(r=>`
+    <tr>
+      <td><b style="color:var(--accent)">${r.num}</b></td><td>${fmtDate(r.date)}</td>
+      <td>${cl[r.cat]||r.cat}</td><td>${r.vendor||'—'}</td><td>${r.job||'—'}</td>
+      <td>${driverName(r.driver)}</td><td><b>${fmtAmt(r.amount)}</b></td>
+      <td style="text-align:center">${r.photo?`<a href="${r.photo}" target="_blank" style="color:var(--accent2);font-size:11px">📎 View</a>`:'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteReceipt('${r.id}')">Del</button></td>
+    </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">No receipts found</td></tr>';
+}
+function deleteReceipt(id){ if(!confirm('Delete receipt?')) return; data.receipts=data.receipts.filter(r=>r.id!==id); save(); renderReceipts(); renderCashStats(); showToast('Receipt deleted'); }
+function renderCashStats(){
+  const approved=data.vouchers.filter(v=>v.status==='approved').reduce((s,v)=>s+parseFloat(v.amount||0),0);
+  const review=data.vouchers.filter(v=>v.status==='review').length;
+  const totalR=data.receipts.reduce((s,r)=>s+parseFloat(r.amount||0),0);
+  document.getElementById('cash-stats').innerHTML=`
+    <div class="stat-card orange"><div class="stat-label">Approved Vouchers</div><div class="stat-value" style="font-size:18px">${fmtAmt(approved)}</div></div>
+    <div class="stat-card blue"><div class="stat-label">Pending Review</div><div class="stat-value">${review}</div></div>
+    <div class="stat-card red"><div class="stat-label">Total Receipts</div><div class="stat-value" style="font-size:18px">${fmtAmt(totalR)}</div></div>
+    <div class="stat-card green"><div class="stat-label">Total Vouchers</div><div class="stat-value">${data.vouchers.length}</div></div>`;
+}
+function renderCashBook(){
+  const allTx=[
+    ...data.vouchers.filter(v=>v.status==='approved').map(v=>({date:v.date,ref:v.num,desc:v.desc,cat:v.cat,amount:parseFloat(v.amount||0)})),
+    ...data.receipts.map(r=>({date:r.date,ref:r.num,desc:r.desc||r.vendor,cat:r.cat,amount:parseFloat(r.amount||0)}))
+  ].sort((a,b)=>a.date.localeCompare(b.date));
+  const cl={fuel:'⛽ Fuel',toll:'🛣 Toll/Road',maintenance:'🔧 Maintenance',meals:'🍱 Driver Meals',parking:'🅿️ Parking',stationery:'📎 Stationery',other:'📦 Other'};
+  const catT={};
+  allTx.forEach(t=>{catT[t.cat]=(catT[t.cat]||0)+t.amount;});
+  const maxC=Math.max(...Object.values(catT),1);
+  document.getElementById('category-summary').innerHTML=Object.entries(catT).map(([k,v])=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${cl[k]||k}</span><b>${fmtAmt(v)}</b></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(v/maxC*100).toFixed(0)}%"></div></div>
+    </div>`).join('')||'<div style="color:var(--text3)">No data yet</div>';
+  const mon={};
+  allTx.forEach(t=>{const m=t.date.substring(0,7);mon[m]=(mon[m]||0)+t.amount;});
+  document.getElementById('monthly-summary').innerHTML=Object.entries(mon).sort().map(([m,v])=>`
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span>${new Date(m+'-02').toLocaleDateString('en-AE',{month:'long',year:'numeric'})}</span><b>${fmtAmt(v)}</b>
+    </div>`).join('')||'<div style="color:var(--text3)">No data yet</div>';
+  let bal=0;
+  document.getElementById('cashbook-body').innerHTML=allTx.map(t=>{
+    bal+=t.amount;
+    return `<tr><td>${fmtDate(t.date)}</td><td><b style="color:var(--accent)">${t.ref}</b></td><td>${t.desc}</td><td><span style="font-size:10px;color:var(--text2)">${cl[t.cat]||t.cat}</span></td><td style="color:var(--danger)">${fmtAmt(t.amount)}</td><td style="color:var(--text3)">—</td><td><b>${fmtAmt(bal)}</b></td></tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">No transactions</td></tr>';
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function openExportModal(){
+  const now=new Date();
+  const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('exp-from').value=`${y}-${m}-01`;
+  document.getElementById('exp-to').value=now.toISOString().split('T')[0];
+  document.getElementById('exp-status').value='';
+  document.getElementById('exp-owner').value='';
+  document.getElementById('exp-driver').innerHTML='<option value="">All Drivers</option>'+data.drivers.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('exp-truck').innerHTML='<option value="">All Trucks</option>'+data.trucks.map(t=>`<option value="${t.id}">${t.plate}</option>`).join('');
+  updateExportPreview();
+  openModal('modal-export');
+}
+function getExportData(){
+  const from=document.getElementById('exp-from').value;
+  const to=document.getElementById('exp-to').value;
+  const st=document.getElementById('exp-status').value;
+  const dr=document.getElementById('exp-driver').value;
+  const tr=document.getElementById('exp-truck').value;
+  const own=document.getElementById('exp-owner').value;
+  return data.bookings.filter(b=>{
+    if(from&&b.date<from) return false;
+    if(to&&b.date>to) return false;
+    if(st&&b.status!==st) return false;
+    if(dr&&b.driver!==dr) return false;
+    if(tr&&b.truck!==tr) return false;
+    if(own){const t=data.trucks.find(x=>x.id===b.truck);if(!t||t.owner!==own) return false;}
+    return true;
+  });
+}
+function updateExportPreview(){
+  const list=getExportData();
+  const total=list.reduce((s,b)=>s+parseFloat(b.amount||0),0);
+  document.getElementById('exp-count-label').innerHTML=`<b style="color:var(--text)">${list.length}</b> booking${list.length!==1?'s':''} found`;
+  document.getElementById('exp-total-label').textContent=list.length?fmtAmt(total):'';
+}
+
+// EXCEL DOWNLOAD — direct to PC
+function exportExcel(){
+  const list=getExportData();
+  if(!list.length){showToast('No bookings in selected range');return;}
+  const from=document.getElementById('exp-from').value;
+  const to=document.getElementById('exp-to').value;
+  const total=list.reduce((s,b)=>s+parseFloat(b.amount||0),0);
+
+  // Build rows
+  const rows=list.map((b,i)=>{
+    const dr=getDriver(b.driver);
+    const tr=getTruck(b.truck);
+    return{
+      '#':i+1,
+      'Job Number':b.job,
+      'Booking Date':b.date,
+      'Client / Company':b.client,
+      'Contact Number':b.contact||'',
+      'Pickup Location':b.from,
+      'Delivery Location':b.to,
+      'Pickup Date/Time':b.pickup?(b.pickup.replace('T',' ')):'',
+      'Delivery Date/Time':b.delivery?(b.delivery.replace('T',' ')):'',
+      'Truck Plate':tr?tr.plate:'—',
+      'Truck Type':tr?tr.type:'—',
+      'Ownership':tr?(tr.owner==='gsi'?'GSI':vendorName(tr.vendorId)):'—',
+      'Driver Name':dr?dr.name:'—',
+      'Driver Phone':dr?dr.phone:'—',
+      'Cargo':b.cargo||'',
+      'Weight (tons)':b.weight||'',
+      'Freight (AED)':parseFloat(b.amount||0).toFixed(2),
+      'Status':b.status.charAt(0).toUpperCase()+b.status.slice(1),
+      'Remarks':b.notes||''
+    };
+  });
+
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Booking Details
+  const ws1=XLSX.utils.json_to_sheet([]);
+  // Title rows
+  XLSX.utils.sheet_add_aoa(ws1,[
+    ['GSI FleetOps — Booking Report'],
+    [`Period: ${from} to ${to}`],
+    [`Generated: ${new Date().toLocaleString()}`],
+    [`Total Bookings: ${list.length}   |   Total Revenue: AED ${total.toFixed(2)}`],
+    []
+  ],{origin:'A1'});
+  XLSX.utils.sheet_add_json(ws1,rows,{origin:'A6'});
+  // Total row
+  const totalRowIdx=list.length+6;
+  XLSX.utils.sheet_add_aoa(ws1,[['','','','','','','','','','','','','','','','','TOTAL AED '+total.toFixed(2),'','']],{origin:`A${totalRowIdx+1}`});
+  ws1['!cols']=[{wch:4},{wch:12},{wch:12},{wch:28},{wch:18},{wch:22},{wch:22},{wch:18},{wch:18},{wch:16},{wch:14},{wch:20},{wch:22},{wch:16},{wch:22},{wch:10},{wch:14},{wch:12},{wch:28}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Booking Details');
+
+  // Sheet 2: Summary by Status
+  const byStatus={};
+  list.forEach(b=>{if(!byStatus[b.status])byStatus[b.status]={count:0,total:0};byStatus[b.status].count++;byStatus[b.status].total+=parseFloat(b.amount||0);});
+  const sumRows=[
+    ['Status','Count','Total (AED)'],
+    ...Object.entries(byStatus).map(([s,v])=>[s.charAt(0).toUpperCase()+s.slice(1),v.count,v.total.toFixed(2)]),
+    ['GRAND TOTAL',list.length,total.toFixed(2)]
+  ];
+  // By Driver
+  const byDriver={};
+  list.forEach(b=>{const dn=driverName(b.driver);if(!byDriver[dn])byDriver[dn]={count:0,total:0};byDriver[dn].count++;byDriver[dn].total+=parseFloat(b.amount||0);});
+  const drvRows=[
+    [],['Driver','Jobs','Total (AED)'],
+    ...Object.entries(byDriver).map(([d,v])=>[d,v.count,v.total.toFixed(2)])
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet([
+    ['GSI FleetOps — Summary Report'],
+    [`Period: ${from} to ${to}`],[],
+    ...sumRows,...drvRows
+  ]);
+  ws2['!cols']=[{wch:28},{wch:10},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Summary');
+
+  // DIRECT DOWNLOAD
+  XLSX.writeFile(wb,`GSI_Bookings_${from}_to_${to}.xlsx`);
+  showToast(`✅ Excel downloaded: GSI_Bookings_${from}_to_${to}.xlsx`);
+}
+
+// PDF DOWNLOAD — generates HTML and triggers browser print-to-PDF
+function exportPDF(){
+  const list=getExportData();
+  if(!list.length){showToast('No bookings in selected range');return;}
+  const from=document.getElementById('exp-from').value;
+  const to=document.getElementById('exp-to').value;
+  const total=list.reduce((s,b)=>s+parseFloat(b.amount||0),0);
+  const now=new Date().toLocaleString('en-AE');
+  const sc={completed:'#16a34a',active:'#2563eb',pending:'#d97706',cancelled:'#dc2626'};
+  const byStatus={};
+  list.forEach(b=>{if(!byStatus[b.status])byStatus[b.status]={count:0,total:0};byStatus[b.status].count++;byStatus[b.status].total+=parseFloat(b.amount||0);});
+
+  const rows=list.map((b,i)=>{
+    const dr=getDriver(b.driver);const tr=getTruck(b.truck);
+    const c=sc[b.status]||'#555';
+    return `<tr style="background:${i%2===0?'#f9fafb':'#fff'}">
+      <td style="font-weight:700;color:#d97706">${b.job}</td>
+      <td>${b.date}</td><td style="font-weight:600">${b.client}</td>
+      <td>${b.from}</td><td>${b.to}</td>
+      <td>${tr?tr.plate:'—'}</td>
+      <td>${tr?(tr.owner==='gsi'?'GSI':vendorName(tr.vendorId)):'—'}</td>
+      <td>${dr?dr.name:'—'}</td>
+      <td>${b.cargo||'—'}</td>
+      <td style="text-align:right;font-weight:700">AED ${parseFloat(b.amount||0).toFixed(2)}</td>
+      <td><span style="background:${c}22;color:${c};border:1px solid ${c}55;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase">${b.status}</span></td>
+    </tr>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>GSI Bookings ${from} to ${to}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Arial,sans-serif;color:#111;background:#fff;font-size:11px}
+    .hdr{background:#0d0f14;color:#fff;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
+    .logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#f5a623}
+    .hdr-info{text-align:right;font-size:10px;color:#8890a8;line-height:1.8}
+    .hdr-info b{color:#fff}
+    .body{padding:18px 28px}
+    .summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .sum-box{background:#0d0f14;color:#fff;border-radius:6px;padding:10px 18px;display:flex;align-items:center;gap:12px}
+    .sum-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8890a8}
+    .sum-val{font-size:22px;font-weight:900;color:#22c55e}
+    .scard{background:#f9fafb;border:1px solid #e5e7eb;border-radius:5px;padding:8px 14px;text-align:center;min-width:90px}
+    .scard-l{font-size:9px;text-transform:uppercase;color:#6b7280;margin-bottom:3px}
+    .scard-v{font-size:18px;font-weight:800}
+    table{width:100%;border-collapse:collapse}
+    th{background:#0d0f14;color:#f5a623;font-size:9px;text-transform:uppercase;letter-spacing:.8px;padding:7px 8px;text-align:left}
+    td{padding:6px 8px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+    tfoot td{background:#0d0f14;color:#22c55e;font-weight:900;font-size:13px}
+    .ftr{background:#f9fafb;border-top:2px solid #f5a623;padding:12px 28px;display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-top:16px}
+    .print-btn{position:fixed;top:16px;right:16px;background:#f5a623;color:#000;border:none;padding:10px 24px;border-radius:5px;font-weight:700;font-size:13px;cursor:pointer;z-index:99}
+    @media print{.print-btn{display:none}@page{margin:8mm;size:A4 landscape}}
+  </style></head><body>
+  <button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+  <div class="hdr">
+    <div><div class="logo">GSI FLEETOPS</div><div style="font-size:11px;color:#8890a8;margin-top:3px">Booking Export Report</div></div>
+    <div class="hdr-info"><b>Period:</b> ${from} to ${to}<br><b>Generated:</b> ${now}<br><b>Total Records:</b> ${list.length} bookings</div>
+  </div>
+  <div class="body">
+    <div class="summary-row">
+      <div class="sum-box"><div><div class="sum-label">Total Bookings</div><div class="sum-val">${list.length}</div></div><div style="width:1px;height:36px;background:#252a3a;margin:0 4px"></div><div><div class="sum-label">Total Revenue</div><div class="sum-val">AED ${total.toFixed(2)}</div></div></div>
+      ${Object.entries(byStatus).map(([s,v])=>`<div class="scard"><div class="scard-l">${s}</div><div class="scard-v" style="color:${sc[s]||'#111'}">${v.count}</div></div>`).join('')}
+    </div>
+    <table>
+      <thead><tr><th>Job #</th><th>Date</th><th>Client</th><th>From</th><th>To</th><th>Truck</th><th>Fleet</th><th>Driver</th><th>Cargo</th><th>Amount (AED)</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="9" style="text-align:right;padding:8px;color:#f5a623;font-size:11px">GRAND TOTAL</td><td style="padding:8px">AED ${total.toFixed(2)}</td><td></td></tr></tfoot>
+    </table>
+  </div>
+  <div class="ftr"><span>GSI Logistics Management System</span><span>Confidential — Internal Use Only</span><span>Printed: ${now}</span></div>
+  <script>window.onload=()=>setTimeout(()=>window.print(),400);<\/script>
+  </body></html>`;
+
+  // Create a Blob and download it directly
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`GSI_Bookings_${from}_to_${to}.html`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},1000);
+  showToast('✅ PDF report downloaded — open the HTML file and press Print → Save as PDF');
+}
+
+// ============================================================
+// GPS
+// ============================================================
+function refreshGPS(){renderGPSDemo();showToast('GPS refreshed');}
+function saveGPSConfig(){const url=document.getElementById('gps-url')?.value;const key=document.getElementById('gps-key')?.value;if(!url||!key){alert('Enter API URL and Key');return;}showToast('GPS config saved');}
+function testGPSConnection(){if(!document.getElementById('gps-url')?.value){alert('Enter an API URL first');return;}showToast('Testing… (requires live GPS credentials)');}
+function useSimulatedGPS(){document.getElementById('gps-config-banner').style.display='none';renderGPSDemo();showToast('Demo mode active');}
+function onProviderChange(){
+  const p=document.getElementById('gps-provider')?.value;
+  const h=document.getElementById('gps-provider-hint');
+  const hints={samsara:'Samsara: https://api.samsara.com/fleet/vehicles/locations — Bearer token',teltonika:'Teltonika: Your FMB server endpoint — API token',wialon:'Wialon: https://hst-api.wialon.com/wialon/ajax.html — session token',tracksolid:'TrackSolid: https://api.tracksolid.com/gpsnewsit.do — API key',ruptela:'Ruptela: https://api.ruptela.com/objects — Bearer token',custom:'Paste your GPS REST API URL returning vehicle locations as JSON'};
+  if(h){h.textContent=hints[p]||'';h.style.display=hints[p]?'block':'none';}
+}
+function renderGPSDemo(){
+  const trucks=data.trucks.slice(0,4);
+  const locs=['Dubai Jebel Ali Port','Sharjah Industrial Area','Abu Dhabi ICAD','Ajman Free Zone','Al Quoz Industrial'];
+  document.getElementById('gps-stats').innerHTML=`
+    <div class="stat-card orange"><div class="stat-label">Trucks Tracked</div><div class="stat-value">${trucks.length}</div></div>
+    <div class="stat-card green"><div class="stat-label">Moving</div><div class="stat-value">${Math.ceil(trucks.length/2)}</div></div>
+    <div class="stat-card blue"><div class="stat-label">Idle</div><div class="stat-value">${Math.floor(trucks.length/2)}</div></div>
+    <div class="stat-card red"><div class="stat-label">Offline</div><div class="stat-value">0</div></div>`;
+  document.getElementById('gps-truck-list').innerHTML=trucks.map((t,i)=>{
+    const spd=i%2===0?Math.floor(Math.random()*80+20):0;
+    return `<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <div style="width:9px;height:9px;border-radius:50%;background:${spd>0?'var(--success)':'var(--text3)'};flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-weight:700;font-size:12px">${t.plate}</div><div style="font-size:10px;color:var(--text2)">${t.model} · ${locs[i%locs.length]}</div></div>
+      <div style="text-align:right"><div style="font-size:12px;font-weight:700;color:${spd>0?'var(--success)':'var(--text3)'}">${spd>0?spd+' km/h':'Idle'}</div><div style="font-size:10px;color:var(--text3)">Demo</div></div>
+    </div>`;}).join('');
+  document.getElementById('gps-history-body').innerHTML=trucks.map((t,i)=>{
+    const spd=i%2===0?Math.floor(Math.random()*80+20):0;
+    const dr=data.drivers[i%data.drivers.length];
+    return `<tr><td><b style="color:var(--accent)">${t.plate}</b></td><td>${dr?dr.name:'—'}</td><td>${locs[i%locs.length]}</td><td>${spd} km/h</td><td>${['N','NE','E','SE','S'][i%5]}</td><td>${new Date().toLocaleTimeString()}</td><td><span class="badge ${spd>0?'badge-active':'badge-pending'}">${spd>0?'Moving':'Idle'}</span></td></tr>`;}).join('');
+  document.getElementById('gps-last-update').textContent='Last update: '+new Date().toLocaleTimeString();
+  // Draw canvas map
+  const cv=document.getElementById('gps-map-canvas');
+  if(!cv) return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.fillStyle='#141720';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#1c2030';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=55){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=55){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.strokeStyle='#252a3a';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/3,0);ctx.lineTo(W/3,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W*2/3,0);ctx.lineTo(W*2/3,H);ctx.stroke();
+  const pts=[{x:110,y:100},{x:290,y:190},{x:450,y:130},{x:190,y:270}];
+  trucks.forEach((t,i)=>{
+    if(!pts[i]) return;
+    const{x,y}=pts[i],mv=i%2===0;
+    ctx.fillStyle=mv?'#22c55e':'#f5a623';ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🚛',x,y);
+    ctx.fillStyle='#e8eaf0';ctx.font='9px Arial';ctx.fillText(t.plate.split(' ').slice(-1)[0],x,y+19);
+  });
+  ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(14,H-24,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#8890a8';ctx.font='10px Arial';ctx.textAlign='left';ctx.fillText('Moving',24,H-20);
+  ctx.fillStyle='#f5a623';ctx.beginPath();ctx.arc(84,H-24,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#8890a8';ctx.fillText('Idle',94,H-20);
+  ctx.textAlign='right';ctx.fillStyle='#555e78';ctx.font='9px Arial';ctx.fillText('DEMO MODE — connect GPS for live data',W-8,H-8);
+}
+
+// ============================================================
+// CLOCK & BOOT
+// ============================================================
+function updateClock(){
+  const now=new Date();
+  const el=document.getElementById('clock');
+  if(el) el.textContent=now.toLocaleTimeString('en-AE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const dd=document.getElementById('dash-date');
+  if(dd) dd.textContent=now.toLocaleDateString('en-AE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+setInterval(updateClock,1000);
+updateClock();
+renderDashboard();
+
+
+// ============================================================
+// API LAYER — all data goes to/from the server
+// ============================================================
+let currentUser = null;
+
+async function api(method, path, body) {
+  const opts = { method, headers: {'Content-Type':'application/json'}, credentials:'include' };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch('/api' + path, opts);
+  if (res.status === 401) { showLogin(); return null; }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) { showToast('Error: ' + (json.error || res.statusText)); return null; }
+  return json;
+}
+
+async function loadAllData() {
+  const [bookings, drivers, trucks, vouchers, receipts, clients, vendors] = await Promise.all([
+    api('GET','/bookings'), api('GET','/drivers'), api('GET','/trucks'),
+    api('GET','/vouchers'), api('GET','/receipts'), api('GET','/clients'), api('GET','/vendors')
+  ]);
+  data.bookings = (bookings||[]).map(b=>({...b, from:b.origin, to:b.destination}));
+  data.drivers  = (drivers||[]).map(d=>({...d, cicpaExpiry:d.cicpa_expiry}));
+  data.trucks   = (trucks||[]).map(t=>({...t, vendorId:t.vendor_id}));
+  data.vouchers = (vouchers||[]).map(v=>({...v, desc:v.description, by:v.requested_by, job:v.job_ref}));
+  data.receipts = (receipts||[]).map(r=>({...r, desc:r.description, driver:r.driver_id, job:r.job_ref}));
+  data.clients  = clients||[];
+  data.vendors  = vendors||[];
+  renderDashboard();
+  renderBookings();
+  renderDrivers();
+  renderTrucks();
+  renderVendors();
+  renderClients();
+  renderCashStats();
+}
+
+async function nextCounter(name) {
+  const r = await api('POST','/counters/increment',{name});
+  return r ? r.value : Date.now();
+}
+
+// ── AUTH ─────────────────────────────────────────────────────
+function showLogin() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+}
+
+function showApp(user) {
+  currentUser = user;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('nav-user-info').textContent = user.full_name + (user.role==='admin'?' 👑':'');
+  const ab = document.getElementById('nav-admin-btn');
+  if (ab) ab.style.display = user.role==='admin' ? '' : 'none';
+  loadAllData();
+}
+
+async function doLogin() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  if (!u||!p) { err.textContent='Enter username and password'; return; }
+  btn.disabled=true; btn.textContent='Signing in...';
+  const res = await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p}),credentials:'include'});
+  btn.disabled=false; btn.textContent='Sign In';
+  const json = await res.json().catch(()=>({}));
+  if (!res.ok) { err.textContent=json.error||'Login failed'; return; }
+  showApp(json.user);
+}
+
+async function doLogout() {
+  await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+  currentUser=null; showLogin();
+}
+
+// Enter key on login
+document.addEventListener('DOMContentLoaded',()=>{
+  ['lu','lp'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('keydown',e=>{if(e.key==='Enter') doLogin();}); });
+  // boot: check if already logged in
+  fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).then(j=>{ if(j.user) showApp(j.user); else showLogin(); }).catch(()=>showLogin());
+});
+
+// ── CRUD OVERRIDES (replace localStorage with API) ───────────
+
+async function saveBooking() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('b-client')){alert('Enter Client name');return;}
+  if(!g('b-from')){alert('Enter Pickup Location');return;}
+  if(!g('b-to')){alert('Enter Delivery Location');return;}
+  const fields = { date:g('b-date'), client:g('b-client'), contact:g('b-contact'),
+    origin:g('b-from'), destination:g('b-to'), pickup:g('b-pickup'), delivery:g('b-delivery'),
+    truck_id:g('b-truck'), driver_id:g('b-driver'), cargo:g('b-cargo'),
+    weight:g('b-weight'), amount:g('b-amount'), status:g('b-status'),
+    notes:g('b-notes'), doc:bookingDocData||null };
+  let ok;
+  if (editBookingId) {
+    ok = await api('PUT','/bookings/'+editBookingId, fields);
+  } else {
+    const num = await nextCounter('job');
+    ok = await api('POST','/bookings', { id:genId(), job:'GSI-'+num, ...fields });
+  }
+  if (ok) { closeModal('modal-booking'); await loadAllData(); showToast('Booking saved!'); }
+}
+
+async function deleteBooking(id) {
+  if(!confirm('Delete this booking?')) return;
+  await api('DELETE','/bookings/'+id);
+  await loadAllData(); showToast('Booking deleted');
+}
+
+async function saveDriver() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('d-name')){alert('Name required');return;}
+  const obj={ name:g('d-name'), ic:g('d-ic'), phone:g('d-phone'), license:g('d-license'),
+    expiry:g('d-expiry'), status:g('d-status'), cicpa:g('d-cicpa'), cicpa_expiry:g('d-cicpa-expiry') };
+  if (editDriverId) { await api('PUT','/drivers/'+editDriverId, obj); }
+  else { await api('POST','/drivers',{ id:genId(), ...obj }); }
+  closeModal('modal-driver'); await loadAllData(); showToast('Driver saved!');
+}
+async function deleteDriver(id) {
+  if(!confirm('Remove driver?')) return;
+  await api('DELETE','/drivers/'+id); await loadAllData(); showToast('Driver removed');
+}
+
+async function saveTruck() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('t-plate')){alert('Plate required');return;}
+  const obj={ plate:g('t-plate'), model:g('t-model'), type:g('t-type'), capacity:g('t-capacity'),
+    roadtax:g('t-roadtax'), status:g('t-status'), owner:g('t-owner'), vendor_id:g('t-vendor') };
+  if (editTruckId) { await api('PUT','/trucks/'+editTruckId, obj); }
+  else { await api('POST','/trucks',{ id:genId(), ...obj }); }
+  closeModal('modal-truck'); await loadAllData(); showToast('Truck saved!');
+}
+async function deleteTruck(id) {
+  if(!confirm('Remove truck?')) return;
+  await api('DELETE','/trucks/'+id); await loadAllData(); showToast('Truck removed');
+}
+
+async function saveClient() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('cl-name')){alert('Name required');return;}
+  const obj={ type:g('cl-type'), name:g('cl-name'), contact:g('cl-contact'), phone:g('cl-phone'),
+    email:g('cl-email'), trn:g('cl-trn'), address:g('cl-address'), credit:g('cl-credit'),
+    terms:g('cl-terms'), notes:g('cl-notes') };
+  if (editClientId) { await api('PUT','/clients/'+editClientId, obj); }
+  else {
+    const num=await nextCounter('client');
+    await api('POST','/clients',{ id:genId(), num:'CLT-'+num, ...obj });
+  }
+  closeModal('modal-client'); await loadAllData(); showToast('Client saved!');
+}
+async function deleteClient(id) {
+  if(!confirm('Delete client?')) return;
+  await api('DELETE','/clients/'+id); await loadAllData(); showToast('Client deleted');
+}
+
+async function saveVendor() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('vn-name')){alert('Name required');return;}
+  const obj={ cat:g('vn-cat'), name:g('vn-name'), contact:g('vn-contact'), phone:g('vn-phone'),
+    email:g('vn-email'), trn:g('vn-trn'), terms:g('vn-terms'), status:g('vn-status'), notes:g('vn-notes') };
+  if (editVendorId) { await api('PUT','/vendors/'+editVendorId, obj); }
+  else {
+    const num=await nextCounter('vendor');
+    await api('POST','/vendors',{ id:genId(), num:'VND-'+num, ...obj });
+  }
+  closeModal('modal-vendor'); await loadAllData(); showToast('Vendor saved!');
+}
+async function deleteVendor(id) {
+  if(!confirm('Delete vendor?')) return;
+  await api('DELETE','/vendors/'+id); await loadAllData(); showToast('Vendor deleted');
+}
+
+async function saveVoucher() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('v-desc')||!g('v-amount')||!g('v-by')){alert('Fill Description, Requested By and Amount');return;}
+  const num=await nextCounter('voucher');
+  await api('POST','/vouchers',{ id:genId(), num:'PCV-'+num, date:g('v-date'), cat:g('v-cat'),
+    description:g('v-desc'), requested_by:g('v-by'), amount:g('v-amount'),
+    job_ref:g('v-job'), status:'review', photo:voucherPhotoData||null });
+  closeModal('modal-voucher'); await loadAllData(); showToast('Voucher submitted!');
+}
+async function approveVoucher(approve) {
+  await api('PUT','/vouchers/'+viewVoucherId,{status:approve?'approved':'rejected'});
+  closeModal('modal-view-voucher'); await loadAllData(); showToast(approve?'Approved!':'Rejected');
+}
+async function deleteVoucher(id) {
+  if(!confirm('Delete voucher?')) return;
+  await api('DELETE','/vouchers/'+id); await loadAllData(); showToast('Voucher deleted');
+}
+
+async function saveReceipt() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('r-amount')){alert('Amount required');return;}
+  const num=await nextCounter('receipt');
+  await api('POST','/receipts',{ id:genId(), num:'RCP-'+num, date:g('r-date'), cat:g('r-cat'),
+    vendor:g('r-vendor'), job_ref:g('r-job'), driver_id:g('r-driver'),
+    description:g('r-desc'), amount:g('r-amount'), photo:receiptPhotoData||null });
+  closeModal('modal-receipt'); await loadAllData(); showToast('Receipt saved!');
+}
+async function deleteReceipt(id) {
+  if(!confirm('Delete receipt?')) return;
+  await api('DELETE','/receipts/'+id); await loadAllData(); showToast('Receipt deleted');
+}
+
+// ── USER MANAGEMENT ──────────────────────────────────────────
+let _allUsers=[];
+async function openUserManagement() {
+  _allUsers = await api('GET','/users')||[];
+  _renderUsers(); openModal('modal-users');
+}
+function _renderUsers() {
+  document.getElementById('users-tbody').innerHTML = _allUsers.map(u=>`
+    <tr>
+      <td><b>${u.username}</b></td><td>${u.full_name}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-active':'badge-completed'}">${u.role}</span></td>
+      <td>${u.department||'—'}</td>
+      <td><span class="badge ${u.active?'badge-completed':'badge-cancelled'}">${u.active?'Active':'Inactive'}</span></td>
+      <td style="font-size:10px">${u.last_login?new Date(u.last_login).toLocaleDateString('en-AE'):'Never'}</td>
+      <td>
+        <button class="btn btn-blue btn-sm" onclick="_editUser('${u.id}')">Edit</button>
+        ${u.id!==currentUser?.id?`<button class="btn btn-danger btn-sm" onclick="_deactivateUser('${u.id}')">Deactivate</button>`:'<span style="font-size:10px;color:var(--text3)">(you)</span>'}
+      </td>
+    </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">No users</td></tr>';
+}
+function _editUser(id) {
+  const u=_allUsers.find(x=>x.id===id); if(!u) return;
+  document.getElementById('ue-id').value=u.id;
+  document.getElementById('ue-uname').value=u.username;
+  document.getElementById('ue-fname').value=u.full_name;
+  document.getElementById('ue-role').value=u.role;
+  document.getElementById('ue-dept').value=u.department||'';
+  document.getElementById('ue-active').value=u.active?'1':'0';
+  document.getElementById('ue-pass').value='';
+  openModal('modal-edit-user');
+}
+async function _saveEditUser() {
+  const g=id=>document.getElementById(id)?.value||'';
+  const body={full_name:g('ue-fname'),role:g('ue-role'),department:g('ue-dept'),active:g('ue-active')==='1'};
+  if(g('ue-pass')) body.password=g('ue-pass');
+  await api('PUT','/users/'+g('ue-id'),body);
+  closeModal('modal-edit-user');
+  _allUsers=await api('GET','/users')||[]; _renderUsers(); showToast('User updated!');
+}
+async function _deactivateUser(id) {
+  if(!confirm('Deactivate this user? They will no longer be able to log in.')) return;
+  await api('DELETE','/users/'+id);
+  _allUsers=await api('GET','/users')||[]; _renderUsers(); showToast('User deactivated');
+}
+async function _createUser() {
+  const g=id=>document.getElementById(id)?.value?.trim()||'';
+  if(!g('nu-u')||!g('nu-f')||!g('nu-p')){alert('Username, full name and password required');return;}
+  const r=await api('POST','/users',{username:g('nu-u'),full_name:g('nu-f'),password:g('nu-p'),role:g('nu-r')||'user',department:g('nu-d')});
+  if(r){ closeModal('modal-new-user'); _allUsers=await api('GET','/users')||[]; _renderUsers(); showToast('User created: '+g('nu-u')); openModal('modal-users'); }
+}
+
+// ── CHANGE OWN PASSWORD ──────────────────────────────────────
+function openChangePassword() {
+  document.getElementById('cp-cur').value='';
+  document.getElementById('cp-new').value='';
+  document.getElementById('cp-err').textContent='';
+  openModal('modal-change-pw');
+}
+async function doChangePassword() {
+  const cur=document.getElementById('cp-cur').value;
+  const nw=document.getElementById('cp-new').value;
+  if(!cur||!nw){document.getElementById('cp-err').textContent='Fill in both fields';return;}
+  if(nw.length<6){document.getElementById('cp-err').textContent='New password min 6 characters';return;}
+  const r=await api('POST','/auth/change-password',{current:cur,newpass:nw});
+  if(r){closeModal('modal-change-pw');showToast('Password changed!');}
+  else{document.getElementById('cp-err').textContent='Incorrect current password';}
+}
+
+</script>
+</body>
+</html>
